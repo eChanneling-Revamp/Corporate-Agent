@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { ToastContainer } from '../../store/Toast';
 const DashboardLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const toggleSidebar = () => {
@@ -16,6 +17,7 @@ const DashboardLayout = () => {
             <Outlet />
           </div>
         </main>
+        <ToastContainer />
       </div>
     </div>;
 };

@@ -1,92 +1,21 @@
-import React, { useState, Children } from 'react';
-import { Search, Filter, Calendar, Download, Send, Trash2, Check, Clock, AlertTriangle, XCircle, Eye, Edit, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, Download, Send, Trash2, Check, Clock, AlertTriangle, XCircle, Eye, Edit, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
+import { useAppState } from '../store/AppState';
+import { useToast } from '../store/Toast';
 const AppointmentManagement = () => {
-  const [selectedAppointments, setSelectedAppointments] = useState([]);
+  const { appointments, cancelAppointment } = useAppState();
+  const { showToast } = useToast();
+  const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  // Sample appointments data
-  const appointments = [{
-    id: 'APT-10234',
-    patient: 'John Smith',
-    doctor: 'Dr. Sarah Williams',
-    specialization: 'Cardiologist',
-    date: '2023-10-15',
-    time: '10:30 AM',
-    hospital: 'City Medical Center',
-    status: 'Confirmed',
-    amount: '₹ 2,500'
-  }, {
-    id: 'APT-10235',
-    patient: 'Emily Johnson',
-    doctor: 'Dr. Michael Chen',
-    specialization: 'Neurologist',
-    date: '2023-10-15',
-    time: '11:45 AM',
-    hospital: 'Central Hospital',
-    status: 'Pending',
-    amount: '₹ 3,200'
-  }, {
-    id: 'APT-10236',
-    patient: 'Robert Davis',
-    doctor: 'Dr. Lisa Kumar',
-    specialization: 'Dermatologist',
-    date: '2023-10-15',
-    time: '2:15 PM',
-    hospital: 'Skin & Care Clinic',
-    status: 'Confirmed',
-    amount: '₹ 1,800'
-  }, {
-    id: 'APT-10237',
-    patient: 'Sarah Wilson',
-    doctor: 'Dr. James Rodriguez',
-    specialization: 'Orthopedic',
-    date: '2023-10-16',
-    time: '9:00 AM',
-    hospital: 'Orthopedic Specialty Center',
-    status: 'Payment Failed',
-    amount: '₹ 3,500'
-  }, {
-    id: 'APT-10238',
-    patient: 'Michael Brown',
-    doctor: 'Dr. Patricia Lee',
-    specialization: 'Ophthalmologist',
-    date: '2023-10-16',
-    time: '10:15 AM',
-    hospital: 'Vision Care Hospital',
-    status: 'Confirmed',
-    amount: '₹ 2,200'
-  }, {
-    id: 'APT-10239',
-    patient: 'Jennifer Garcia',
-    doctor: 'Dr. David Wilson',
-    specialization: 'Psychiatrist',
-    date: '2023-10-17',
-    time: '1:00 PM',
-    hospital: 'Mental Health Clinic',
-    status: 'Cancelled',
-    amount: '₹ 2,800'
-  }, {
-    id: 'APT-10240',
-    patient: 'Thomas Martinez',
-    doctor: 'Dr. Elizabeth Taylor',
-    specialization: 'Endocrinologist',
-    date: '2023-10-17',
-    time: '3:30 PM',
-    hospital: 'Diabetes Care Center',
-    status: 'Pending',
-    amount: '₹ 2,600'
-  }, {
-    id: 'APT-10241',
-    patient: 'Jessica Robinson',
-    doctor: 'Dr. Robert Johnson',
-    specialization: 'Pediatrician',
-    date: '2023-10-18',
-    time: '9:15 AM',
-    hospital: "Children's Hospital",
-    status: 'Confirmed',
-    amount: '₹ 1,900'
-  }];
-  const getStatusBadge = status => {
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(appointments.length / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(appointments.length, startIndex + pageSize);
+  const pageItems = appointments.slice(startIndex, endIndex);
+  useEffect(() => { setPage(1); }, [appointments, pageSize]);
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Confirmed':
         return <span className="flex items-center text-green-700 bg-green-50 rounded-full px-2 py-1 text-xs font-medium">
@@ -118,12 +47,26 @@ const AppointmentManagement = () => {
     }
     setSelectAll(!selectAll);
   };
-  const toggleSelectAppointment = id => {
+  const toggleSelectAppointment = (id: string) => {
     if (selectedAppointments.includes(id)) {
       setSelectedAppointments(selectedAppointments.filter(appId => appId !== id));
     } else {
       setSelectedAppointments([...selectedAppointments, id]);
     }
+  };
+  const exportCSV = () => {
+    if (!appointments.length) return;
+    const header = ['Appointment ID','Patient','Doctor','Specialization','Date','Time','Hospital','Status','Amount'];
+    const rows = appointments.map(a => [a.id,a.patient,a.doctor,a.specialization,a.date,a.time,a.hospital,a.status,a.amount]);
+    const csv = [header, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'appointments.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast({ type: 'success', title: 'Exported', message: 'Appointments exported to CSV.' });
   };
   return <div className="space-y-6">
       {/* Filter & Search Bar */}
@@ -212,11 +155,11 @@ const AppointmentManagement = () => {
               <Send size={16} className="mr-2" />
               Send Reminders
             </button>
-            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center text-sm">
+            <button onClick={exportCSV} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center text-sm">
               <Download size={16} className="mr-2" />
               Export
             </button>
-            <button className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-md hover:bg-red-50 flex items-center text-sm">
+            <button onClick={() => { selectedAppointments.forEach(id => cancelAppointment(id)); showToast({ type: 'success', title: 'Cancelled', message: `${selectedAppointments.length} appointment(s) cancelled.` }); }} className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-md hover:bg-red-50 flex items-center text-sm">
               <Trash2 size={16} className="mr-2" />
               Cancel Selected
             </button>
@@ -260,7 +203,12 @@ const AppointmentManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {appointments.map(appointment => <tr key={appointment.id} className={`hover:bg-gray-50 ${selectedAppointments.includes(appointment.id) ? 'bg-blue-50' : ''}`}>
+              {appointments.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-4 py-6 text-center text-sm text-gray-500">No appointments yet.</td>
+                </tr>
+              )}
+              {pageItems.map(appointment => <tr key={appointment.id} className={`hover:bg-gray-50 ${selectedAppointments.includes(appointment.id) ? 'bg-blue-50' : ''}`}>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center">
                       <input type="checkbox" className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked={selectedAppointments.includes(appointment.id)} onChange={() => toggleSelectAppointment(appointment.id)} />
@@ -301,7 +249,7 @@ const AppointmentManagement = () => {
                       <button className="text-green-600 hover:text-green-800" title="Edit">
                         <Edit size={18} />
                       </button>
-                      <button className="text-red-600 hover:text-red-800" title="Cancel">
+                      <button onClick={() => { cancelAppointment(appointment.id); showToast({ type: 'success', title: 'Appointment cancelled', message: `${appointment.id} has been cancelled.` }); }} className="text-red-600 hover:text-red-800" title="Cancel">
                         <XCircle size={18} />
                       </button>
                     </div>
@@ -312,35 +260,26 @@ const AppointmentManagement = () => {
         </div>
         {/* Pagination */}
         <div className="bg-gray-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 gap-4 sm:gap-0">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">1</span> to{' '}
-              <span className="font-medium">8</span> of{' '}
-              <span className="font-medium">24</span> results
-            </p>
+          <div className="text-sm text-gray-700">
+            Showing <span className="font-medium">{appointments.length === 0 ? 0 : startIndex + 1}</span> – <span className="font-medium">{endIndex}</span> of <span className="font-medium">{appointments.length}</span>
           </div>
-          <div>
-            <div className="flex justify-center space-x-1">
-              <button className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span className="sr-only">Previous</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center border border-gray-300 rounded">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 text-sm text-gray-600 disabled:opacity-50">
                 <ChevronLeft size={18} />
               </button>
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100">
-                1
-              </button>
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                2
-              </button>
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                3
-              </button>
-              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                ...
-              </span>
-              <button className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span className="sr-only">Next</span>
+              <div className="px-3 py-2 text-sm">Page {page} of {totalPages}</div>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 text-sm text-gray-600 disabled:opacity-50">
                 <ChevronRight size={18} />
               </button>
+            </div>
+            <div className="flex items-center text-sm">
+              <span className="mr-2 text-gray-600">Rows per page</span>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-300 rounded px-2 py-1">
+                {[10, 20, 50, 100].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

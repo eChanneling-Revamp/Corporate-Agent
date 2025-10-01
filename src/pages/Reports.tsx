@@ -1,5 +1,4 @@
-import React from 'react';
-import { Download, Calendar, FileText, BarChart2, PieChart, LineChart, MapPin } from 'lucide-react';
+import { Download, FileText, BarChart2, PieChart, LineChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart as RechartLineChart, Line, PieChart as RechartPieChart, Pie, Cell } from 'recharts';
 const Reports = () => {
   // Sample data for charts
@@ -94,6 +93,27 @@ const Reports = () => {
     value: 7
   }];
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  const exportCsv = (filename: string, header: string[], rows: (string | number)[][]) => {
+    const csv = [header, ...rows]
+      .map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const exportBookings = () => {
+    exportCsv('booking_trends.csv', ['Month','Appointments'], monthlyBookings.map(d => [d.month, d.appointments]));
+  };
+  const exportRevenue = () => {
+    exportCsv('revenue_by_month.csv', ['Month','Revenue'], revenueData.map(d => [d.month, d.revenue]));
+  };
+  const exportSpecializations = () => {
+    exportCsv('specialization_distribution.csv', ['Specialization','Share'], specializationData.map(d => [d.name, d.value]));
+  };
   return <div className="space-y-6">
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -145,8 +165,8 @@ const Reports = () => {
                 Booking Trends
               </h2>
             </div>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-              View Details
+            <button onClick={exportBookings} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+              <Download size={16} className="mr-1" /> Export CSV
             </button>
           </div>
           <div className="h-80">
@@ -178,8 +198,8 @@ const Reports = () => {
                 Revenue by Month
               </h2>
             </div>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-              View Details
+            <button onClick={exportRevenue} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+              <Download size={16} className="mr-1" /> Export CSV
             </button>
           </div>
           <div className="h-80">
@@ -211,6 +231,9 @@ const Reports = () => {
                 Specialization Distribution
               </h2>
             </div>
+            <button onClick={exportSpecializations} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+              <Download size={16} className="mr-1" /> Export CSV
+            </button>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -219,7 +242,7 @@ const Reports = () => {
                 name,
                 percent
               }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {specializationData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  {specializationData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
                 <Tooltip formatter={(value, name) => [`${value}%`, name]} />
               </RechartPieChart>
