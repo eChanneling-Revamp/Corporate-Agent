@@ -8,7 +8,7 @@ const PaymentManagement = () => {
     patient: 'John Smith',
     doctor: 'Dr. Sarah Williams',
     date: '2023-10-15',
-    amount: '₹ 2,500',
+    amount: 'Rs 2,500',
     method: 'Credit Card',
     status: 'Completed',
     transactionId: 'TXN-123456'
@@ -18,7 +18,7 @@ const PaymentManagement = () => {
     patient: 'Emily Johnson',
     doctor: 'Dr. Michael Chen',
     date: '2023-10-15',
-    amount: '₹ 3,200',
+    amount: 'Rs 3,200',
     method: 'Net Banking',
     status: 'Pending',
     transactionId: 'TXN-123457'
@@ -28,7 +28,7 @@ const PaymentManagement = () => {
     patient: 'Robert Davis',
     doctor: 'Dr. Lisa Kumar',
     date: '2023-10-15',
-    amount: '₹ 1,800',
+    amount: 'Rs 1,800',
     method: 'UPI',
     status: 'Completed',
     transactionId: 'TXN-123458'
@@ -38,7 +38,7 @@ const PaymentManagement = () => {
     patient: 'Sarah Wilson',
     doctor: 'Dr. James Rodriguez',
     date: '2023-10-16',
-    amount: '₹ 3,500',
+    amount: 'Rs 3,500',
     method: 'Credit Card',
     status: 'Failed',
     transactionId: 'TXN-123459'
@@ -48,7 +48,7 @@ const PaymentManagement = () => {
     patient: 'Michael Brown',
     doctor: 'Dr. Patricia Lee',
     date: '2023-10-16',
-    amount: '₹ 2,200',
+    amount: 'Rs 2,200',
     method: 'Debit Card',
     status: 'Completed',
     transactionId: 'TXN-123460'
@@ -58,7 +58,7 @@ const PaymentManagement = () => {
     patient: 'Jennifer Garcia',
     doctor: 'Dr. David Wilson',
     date: '2023-10-17',
-    amount: '₹ 2,800',
+    amount: 'Rs 2,800',
     method: 'UPI',
     status: 'Refunded',
     transactionId: 'TXN-123461'
@@ -100,7 +100,7 @@ const PaymentManagement = () => {
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-sm text-gray-500 mb-1">Total Revenue</p>
-          <h3 className="text-2xl font-semibold text-gray-800">₹ 325,840</h3>
+          <h3 className="text-2xl font-semibold text-gray-800">Rs 325,840</h3>
           <div className="mt-3">
             <span className="text-xs font-medium text-green-600">+8%</span>
             <span className="text-xs text-gray-500 ml-1">vs last month</span>

@@ -61,7 +61,7 @@ const initialDoctors: Doctor[] = [
     experience: '15 years',
     rating: 4.8,
     reviews: 124,
-    fee: '₹ 2,500',
+    fee: 'Rs 2,500',
     availableDates: ['Today', 'Tomorrow', 'Oct 18', 'Oct 20'],
     image:
       'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80',
@@ -74,7 +74,7 @@ const initialDoctors: Doctor[] = [
     experience: '12 years',
     rating: 4.6,
     reviews: 98,
-    fee: '₹ 3,200',
+    fee: 'Rs 3,200',
     availableDates: ['Tomorrow', 'Oct 19', 'Oct 21'],
     image:
       'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80',
@@ -87,7 +87,7 @@ const initialDoctors: Doctor[] = [
     experience: '8 years',
     rating: 4.9,
     reviews: 156,
-    fee: '₹ 1,800',
+    fee: 'Rs 1,800',
     availableDates: ['Today', 'Oct 18', 'Oct 19', 'Oct 22'],
     image:
       'https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80',
@@ -100,7 +100,7 @@ const initialDoctors: Doctor[] = [
     experience: '20 years',
     rating: 4.7,
     reviews: 210,
-    fee: '₹ 3,500',
+    fee: 'Rs 3,500',
     availableDates: ['Oct 18', 'Oct 19', 'Oct 20', 'Oct 21'],
     image:
       'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80',

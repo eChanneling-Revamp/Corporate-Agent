@@ -127,7 +127,7 @@ const Reports = () => {
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-sm text-gray-500 mb-1">Revenue (Oct)</p>
-          <h3 className="text-2xl font-semibold text-gray-800">₹ 170,000</h3>
+          <h3 className="text-2xl font-semibold text-gray-800">Rs 170,000</h3>
           <div className="mt-3">
             <span className="text-xs font-medium text-red-600">-5.5%</span>
             <span className="text-xs text-gray-500 ml-1">vs last month</span>
@@ -213,7 +213,7 @@ const Reports = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={value => [`₹ ${value}`, 'Revenue']} />
+                <Tooltip formatter={value => [`Rs ${value}`, 'Revenue']} />
                 <Legend />
                 <Bar dataKey="revenue" fill="#10b981" />
               </BarChart>
