@@ -9,45 +9,45 @@ A modern, responsive web application built with Next.js 14 for managing corporat
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat-square&logo=tailwind-css)
 ![Redux](https://img.shields.io/badge/Redux_Toolkit-2.0-764ABC?style=flat-square&logo=redux)
 
-## 🚀 Features
+## Features
 
-### 📊 Dashboard & Analytics
+### Dashboard & Analytics
 - **Real-time Statistics**: Live appointment counts, revenue tracking, and performance metrics
 - **Interactive Charts**: Visual representation of data using Recharts
 - **Quick Actions Panel**: Fast access to common operations
 - **Recent Appointments**: Overview of latest bookings and status updates
 
-### 👨‍⚕️ Doctor & Appointment Management
+### Doctor & Appointment Management
 - **Advanced Doctor Search**: Filter by specialization, availability, and location
 - **Appointment Scheduling**: Create, modify, and cancel appointments
 - **Bulk Booking System**: Schedule multiple appointments efficiently
 - **ACB Confirmation**: Automated Confirmation Booking system
 
-### 💳 Payment & Financial Management
+### Payment & Financial Management
 - **Payment Processing**: Handle corporate payment transactions
 - **Invoice Generation**: Create and manage billing documents
 - **Financial Reports**: Detailed revenue and expense tracking
 - **Payment History**: Complete transaction audit trail
 
-### 📈 Reporting & Analytics
+### Reporting & Analytics
 - **Comprehensive Reports**: Generate detailed operational reports
 - **Data Export**: Export reports in multiple formats
 - **Performance Metrics**: Track KPIs and business metrics
 - **Custom Filters**: Filter reports by date, doctor, department, etc.
 
-### 🔐 Security & Authentication
+### Security & Authentication
 - **JWT Authentication**: Secure token-based authentication
 - **Role-based Access**: Different permission levels for agents
 - **Session Management**: Persistent login with redux-persist
 - **Protected Routes**: Secure access to sensitive pages
 
-### 📱 Responsive Design
+### Responsive Design
 - **Mobile-First**: Optimized for all device sizes
 - **Tablet Support**: Perfect experience on tablets
 - **Desktop Optimized**: Full-featured desktop interface
 - **Ultra-wide Support**: Excellent experience on large screens
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend Framework
 - **Next.js 14**: React framework with SSR, routing, and optimization
@@ -83,7 +83,7 @@ A modern, responsive web application built with Next.js 14 for managing corporat
 - **PostCSS**: CSS processing with Autoprefixer
 - **TypeScript ESLint**: TypeScript-specific linting rules
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── components/           # Reusable UI components
@@ -129,7 +129,7 @@ A modern, responsive web application built with Next.js 14 for managing corporat
 └── types/               # TypeScript type definitions
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Node.js**: Version 18.0 or higher
@@ -173,7 +173,7 @@ For testing purposes, use these demo credentials:
 - **Email**: `agent@gmail.com`
 - **Password**: `ABcd123#`
 
-## 📱 Responsive Breakpoints
+## Responsive Breakpoints
 
 The application is optimized for various screen sizes:
 
@@ -182,7 +182,7 @@ The application is optimized for various screen sizes:
 - **Desktop**: `1024px - 1536px` - Full sidebar, desktop-optimized experience
 - **Ultra-wide**: `> 1536px` - Expanded layouts, maximum content visibility
 
-## 🛠️ Available Scripts
+## Available Scripts
 
 ```bash
 # Development
@@ -198,7 +198,7 @@ npm run type-check   # TypeScript type checking
 npm run export       # Export static files
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel Deployment (Recommended)
 This project is optimized for Vercel deployment:
@@ -223,7 +223,7 @@ npm run build        # Build the application
 npm run start        # Start production server
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Next.js Configuration (`next.config.js`)
 ```javascript
@@ -251,7 +251,7 @@ Custom Tailwind setup with corporate theme colors and responsive breakpoints.
 ### Redux Store
 Configured with Redux Toolkit for efficient state management and Redux Persist for data persistence.
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -286,7 +286,7 @@ We use conventional commits:
 - `test:` - Adding tests
 - `chore:` - Maintenance tasks
 
-## 📝 API Integration
+## API Integration
 
 The application integrates with the eChanneling backend API:
 
@@ -311,7 +311,7 @@ The application integrates with the eChanneling backend API:
 - `POST /payments` - Process payment
 - `GET /payments/invoices` - Generate invoices
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -340,11 +340,7 @@ npm run build:css
 - Lazy loading for heavy components
 - Redux state normalization
 
-## 📄 License
-
-This project is proprietary software developed for eChanneling. All rights reserved.
-
-## 👥 Team
+## Team
 
 - **Frontend Development**: React/Next.js Team
 - **Backend Integration**: API Integration Team
