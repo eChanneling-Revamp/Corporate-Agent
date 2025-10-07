@@ -1,59 +1,13 @@
-import React from 'react';
+ 
 import { Eye, XCircle, Send, Check, Clock, AlertTriangle } from 'lucide-react';
+import { useAppState } from '../../store/AppState';
+import { useToast } from '../../store/Toast';
+
 const RecentAppointmentsTable = () => {
-  // Sample appointments data
-  const appointments = [{
-    id: 'APT-10234',
-    patient: 'John Smith',
-    doctor: 'Dr. Sarah Williams',
-    specialization: 'Cardiologist',
-    date: '2023-10-15',
-    time: '10:30 AM',
-    hospital: 'City Medical Center',
-    status: 'Confirmed',
-    amount: '₹ 2,500'
-  }, {
-    id: 'APT-10235',
-    patient: 'Emily Johnson',
-    doctor: 'Dr. Michael Chen',
-    specialization: 'Neurologist',
-    date: '2023-10-15',
-    time: '11:45 AM',
-    hospital: 'Central Hospital',
-    status: 'Pending',
-    amount: '₹ 3,200'
-  }, {
-    id: 'APT-10236',
-    patient: 'Robert Davis',
-    doctor: 'Dr. Lisa Kumar',
-    specialization: 'Dermatologist',
-    date: '2023-10-15',
-    time: '2:15 PM',
-    hospital: 'Skin & Care Clinic',
-    status: 'Confirmed',
-    amount: '₹ 1,800'
-  }, {
-    id: 'APT-10237',
-    patient: 'Sarah Wilson',
-    doctor: 'Dr. James Rodriguez',
-    specialization: 'Orthopedic',
-    date: '2023-10-16',
-    time: '9:00 AM',
-    hospital: 'Orthopedic Specialty Center',
-    status: 'Payment Failed',
-    amount: '₹ 3,500'
-  }, {
-    id: 'APT-10238',
-    patient: 'Michael Brown',
-    doctor: 'Dr. Patricia Lee',
-    specialization: 'Ophthalmologist',
-    date: '2023-10-16',
-    time: '10:15 AM',
-    hospital: 'Vision Care Hospital',
-    status: 'Confirmed',
-    amount: '₹ 2,200'
-  }];
-  const getStatusBadge = status => {
+  const { appointments, cancelAppointment } = useAppState();
+  const { showToast } = useToast();
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Confirmed':
         return <span className="flex items-center text-green-700 bg-green-50 rounded-full px-2 py-1 text-xs font-medium">
@@ -73,13 +27,27 @@ const RecentAppointmentsTable = () => {
           </span>;
     }
   };
+  const exportCSV = () => {
+    if (!appointments.length) return;
+    const header = ['Appointment ID','Patient','Doctor','Specialization','Date','Time','Hospital','Status','Amount'];
+    const rows = appointments.map(a => [a.id,a.patient,a.doctor,a.specialization,a.date,a.time,a.hospital,a.status,a.amount]);
+    const csv = [header, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'appointments.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast({ type: 'success', title: 'Exported', message: 'Appointments exported to CSV.' });
+  };
   return <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">
           Recent Appointments
         </h2>
         <div className="flex items-center space-x-2">
-          <button className="px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50">
+          <button onClick={exportCSV} className="px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50">
             Export
           </button>
           <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
@@ -118,6 +86,11 @@ const RecentAppointmentsTable = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
+            {appointments.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-500">No appointments yet. Book from Doctor Search to see them here.</td>
+              </tr>
+            )}
             {appointments.map(appointment => <tr key={appointment.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
                   {appointment.id}
@@ -151,7 +124,7 @@ const RecentAppointmentsTable = () => {
                     <button className="text-blue-600 hover:text-blue-800" title="View">
                       <Eye size={18} />
                     </button>
-                    <button className="text-red-600 hover:text-red-800" title="Cancel">
+                    <button onClick={() => { cancelAppointment(appointment.id); showToast({ type: 'success', title: 'Appointment cancelled', message: `${appointment.id} has been cancelled.` }); }} className="text-red-600 hover:text-red-800" title="Cancel">
                       <XCircle size={18} />
                     </button>
                     <button className="text-green-600 hover:text-green-800" title="Resend">
@@ -164,7 +137,7 @@ const RecentAppointmentsTable = () => {
         </table>
       </div>
       <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-between items-center text-sm">
-        <div>Showing 5 of 24 appointments</div>
+        <div>Showing {appointments.length} appointments</div>
         <div className="flex space-x-1">
           <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100">
             Previous

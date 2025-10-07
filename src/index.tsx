@@ -1,5 +1,16 @@
 import './index.css';
-import React from "react";
-import { render } from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { App } from "./App";
-render(<App />, document.getElementById("root"));
+import { AppStateProvider } from './store/AppState';
+import { ToastProvider } from './store/Toast';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('Root container not found');
+const root = createRoot(container);
+root.render(
+  <ToastProvider>
+    <AppStateProvider>
+      <App />
+    </AppStateProvider>
+  </ToastProvider>
+);

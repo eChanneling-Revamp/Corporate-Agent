@@ -22,7 +22,7 @@ const Dashboard = () => {
     bgColor: 'bg-amber-50'
   }, {
     title: 'Total Revenue (This Month)',
-    value: '₹ 145,285',
+    value: 'Rs 145,285',
     change: '+18%',
     isPositive: true,
     icon: <DollarSign size={20} className="text-green-500" />,
