@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Download, Calendar, TrendingUp, Users, DollarSign, FileText } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, Area, AreaChart } from 'recharts';
+import { Download, Calendar, TrendingUp, Users, DollarSign, FileText, Filter, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import ExportModal from '../components/reports/ExportModal';
 
 const Reports = () => {
   const [reportType, setReportType] = useState('overview');
   const [dateRange, setDateRange] = useState('month');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Mock data for charts
   const appointmentData = [
@@ -34,11 +37,23 @@ const Reports = () => {
   ];
 
   const handleExportReport = () => {
-    toast.success('Report exported successfully');
+    setShowExportModal(true);
   };
 
   const handleGenerateReport = () => {
-    toast.success('Report generated successfully');
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      toast.success('Report generated successfully');
+    }, 1000);
+  };
+
+  const handleRefreshData = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      toast.success('Data refreshed successfully');
+    }, 800);
   };
 
   return (
@@ -84,10 +99,19 @@ const Reports = () => {
               </div>
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleRefreshData}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
               <button
                 onClick={handleGenerateReport}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2 disabled:opacity-50"
               >
                 <FileText className="h-4 w-4" />
                 <span>Generate</span>
@@ -163,32 +187,43 @@ const Reports = () => {
           {/* Appointments & Revenue Chart */}
           <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Appointments & Revenue Trend</h3>
-            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-              <BarChart data={appointmentData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={appointmentData}>
+                <defs>
+                  <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
                 <Tooltip />
-                <Bar yAxisId="left" dataKey="appointments" fill="#8884d8" name="Appointments" />
-                <Bar yAxisId="right" dataKey="revenue" fill="#82ca9d" name="Revenue (LKR)" />
-              </BarChart>
+                <Legend />
+                <Area type="monotone" dataKey="appointments" stroke="#3b82f6" fillOpacity={1} fill="url(#colorAppointments)" />
+                <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Specialty Distribution */}
           <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Specialty Distribution</h3>
-            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={specialtyData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {specialtyData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -197,6 +232,14 @@ const Reports = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {specialtyData.map((entry, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                  <span className="text-xs text-gray-600">{entry.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -262,6 +305,13 @@ const Reports = () => {
             </table>
           </div>
         </div>
+
+        {/* Export Modal */}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          reportType={reportType}
+        />
       </div>
     </DashboardLayout>
   );

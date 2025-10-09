@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Search, Filter, Calendar, MapPin, DollarSign, Star, ChevronDown, X } from 'lucide-react';
+import { Search, Filter, Calendar, MapPin, DollarSign, Star, ChevronDown, X, SlidersHorizontal, Grid, List } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { RootState } from '../store/store';
 import { searchDoctors, clearFilters } from '../store/slices/doctorSlice';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import DoctorCard from '../components/doctor/DoctorCard';
+import AdvancedFilters from '../components/doctor/AdvancedFilters';
 
 interface Doctor {
   id: number;
@@ -17,19 +19,31 @@ interface Doctor {
   rating: number;
   availability: string[];
   image: string;
+  experience?: number;
+  patients?: number;
+  languages?: string[];
 }
 
 const DoctorSearch = () => {
   const dispatch = useDispatch<any>();
   const router = useRouter();
   const { doctors, loading } = useSelector((state: RootState) => state.doctors);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [sortBy, setSortBy] = useState('relevance');
   const [query, setQuery] = useState('');
-  const [specialization, setSpecialization] = useState('');
-  const [hospital, setHospital] = useState('');
-  const [date, setDate] = useState('');
-  const [feeMin, setFeeMin] = useState<number | ''>('');
-  const [feeMax, setFeeMax] = useState<number | ''>('');
+  const [filters, setFilters] = useState({
+    specialization: '',
+    hospital: '',
+    location: '',
+    feeMin: '' as number | '',
+    feeMax: '' as number | '',
+    rating: '' as number | '',
+    availability: '',
+    gender: '',
+    experience: '' as number | ''
+  });
 
   // Booking modal state
   const [bookingDoctorId, setBookingDoctorId] = useState<number | null>(null);
@@ -37,7 +51,7 @@ const DoctorSearch = () => {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
-  // Mock data for demonstration
+  // Enhanced mock data for demonstration
   const mockDoctors: Doctor[] = [
     {
       id: 1,
@@ -47,8 +61,11 @@ const DoctorSearch = () => {
       location: 'Colombo 03',
       fee: 3500,
       rating: 4.8,
-      availability: ['2024-01-15 09:00', '2024-01-15 14:00', '2024-01-16 10:00'],
-      image: '/api/placeholder/150/150'
+      availability: ['2024-01-15 09:00', '2024-01-15 14:00', '2024-01-16 10:00', '2024-01-17 11:00'],
+      image: '/api/placeholder/150/150',
+      experience: 15,
+      patients: 2500,
+      languages: ['English', 'Sinhala', 'Tamil']
     },
     {
       id: 2,
@@ -58,8 +75,11 @@ const DoctorSearch = () => {
       location: 'Colombo 10',
       fee: 4000,
       rating: 4.9,
-      availability: ['2024-01-15 11:00', '2024-01-16 09:00', '2024-01-17 15:00'],
-      image: '/api/placeholder/150/150'
+      availability: ['2024-01-15 11:00', '2024-01-16 09:00', '2024-01-17 15:00', '2024-01-18 10:00'],
+      image: '/api/placeholder/150/150',
+      experience: 20,
+      patients: 3200,
+      languages: ['English', 'Mandarin']
     },
     {
       id: 3,
@@ -69,29 +89,50 @@ const DoctorSearch = () => {
       location: 'Nugegoda',
       fee: 2800,
       rating: 4.7,
-      availability: ['2024-01-15 08:00', '2024-01-15 16:00', '2024-01-16 14:00'],
-      image: '/api/placeholder/150/150'
+      availability: ['2024-01-15 08:00', '2024-01-15 16:00', '2024-01-16 14:00', '2024-01-17 09:00'],
+      image: '/api/placeholder/150/150',
+      experience: 12,
+      patients: 1800,
+      languages: ['English', 'Sinhala']
     }
   ];
 
   const specializations = useMemo(() => Array.from(new Set(mockDoctors.map(d => d.specialization))), []);
   const hospitals = useMemo(() => Array.from(new Set(mockDoctors.map(d => d.hospital))), []);
+  const locations = useMemo(() => Array.from(new Set(mockDoctors.map(d => d.location))), []);
 
   const filteredDoctors = useMemo(() => {
-    return mockDoctors.filter(doctor => {
+    let results = mockDoctors.filter(doctor => {
       const matchesQuery = !query || 
         doctor.name.toLowerCase().includes(query.toLowerCase()) ||
         doctor.specialization.toLowerCase().includes(query.toLowerCase()) ||
         doctor.hospital.toLowerCase().includes(query.toLowerCase());
       
-      const matchesSpecialization = !specialization || doctor.specialization === specialization;
-      const matchesHospital = !hospital || doctor.hospital === hospital;
-      const matchesFeeMin = feeMin === '' || doctor.fee >= Number(feeMin);
-      const matchesFeeMax = feeMax === '' || doctor.fee <= Number(feeMax);
+      const matchesSpecialization = !filters.specialization || doctor.specialization === filters.specialization;
+      const matchesHospital = !filters.hospital || doctor.hospital === filters.hospital;
+      const matchesLocation = !filters.location || doctor.location === filters.location;
+      const matchesFeeMin = filters.feeMin === '' || doctor.fee >= Number(filters.feeMin);
+      const matchesFeeMax = filters.feeMax === '' || doctor.fee <= Number(filters.feeMax);
+      const matchesRating = filters.rating === '' || doctor.rating >= Number(filters.rating);
+      const matchesExperience = filters.experience === '' || (doctor.experience && doctor.experience >= Number(filters.experience));
 
-      return matchesQuery && matchesSpecialization && matchesHospital && matchesFeeMin && matchesFeeMax;
+      return matchesQuery && matchesSpecialization && matchesHospital && matchesLocation && 
+             matchesFeeMin && matchesFeeMax && matchesRating && matchesExperience;
     });
-  }, [query, specialization, hospital, feeMin, feeMax]);
+
+    // Sort results
+    if (sortBy === 'rating') {
+      results.sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === 'fee-low') {
+      results.sort((a, b) => a.fee - b.fee);
+    } else if (sortBy === 'fee-high') {
+      results.sort((a, b) => b.fee - a.fee);
+    } else if (sortBy === 'experience') {
+      results.sort((a, b) => (b.experience || 0) - (a.experience || 0));
+    }
+
+    return results;
+  }, [query, filters, sortBy]);
 
   const handleSearch = () => {
     // In a real app, this would trigger an API call
@@ -100,15 +141,35 @@ const DoctorSearch = () => {
 
   const handleClearFilters = () => {
     setQuery('');
-    setSpecialization('');
-    setHospital('');
-    setDate('');
-    setFeeMin('');
-    setFeeMax('');
+    setFilters({
+      specialization: '',
+      hospital: '',
+      location: '',
+      feeMin: '',
+      feeMax: '',
+      rating: '',
+      availability: '',
+      gender: '',
+      experience: ''
+    });
+    setSortBy('relevance');
+  };
+
+  const handleFilterChange = (name: string, value: any) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    toast.success(`Found ${filteredDoctors.length} doctors matching your criteria`);
+  };
+
+  const handleViewDetails = (doctorId: number) => {
+    toast('Doctor profile view coming soon!', { icon: 'ℹ️' });
   };
 
   const handleBookAppointment = (doctorId: number) => {
-    setBookingDoctorId(doctorId);
+    // Navigate to the comprehensive booking page
+    router.push(`/appointment-booking/${doctorId}`);
   };
 
   const submitBooking = () => {
@@ -139,14 +200,31 @@ const DoctorSearch = () => {
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
             <h2 className="text-lg font-semibold">Search Doctors</h2>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 w-full sm:w-auto"
-            >
-              <Filter className="h-4 w-4" />
-              <span>Filters</span>
-              <ChevronDown className={`h-4 w-4 transform ${showFilters ? 'rotate-180' : ''}`} />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowAdvancedFilters(true)}
+                className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Advanced</span>
+              </button>
+              <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+                  title="List View"
+                >
+                  <List className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+                  title="Grid View"
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="relative mb-4">
@@ -160,59 +238,22 @@ const DoctorSearch = () => {
             />
           </div>
 
-          {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                <select
-                  value={specialization}
-                  onChange={(e) => setSpecialization(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">All Specializations</option>
-                  {specializations.map(spec => (
-                    <option key={spec} value={spec}>{spec}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hospital</label>
-                <select
-                  value={hospital}
-                  onChange={(e) => setHospital(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">All Hospitals</option>
-                  {hospitals.map(hosp => (
-                    <option key={hosp} value={hosp}>{hosp}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Min Fee (LKR)</label>
-                <input
-                  type="number"
-                  value={feeMin}
-                  onChange={(e) => setFeeMin(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Fee (LKR)</label>
-                <input
-                  type="number"
-                  value={feeMax}
-                  onChange={(e) => setFeeMax(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="10000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="relevance">Relevance</option>
+                <option value="rating">Highest Rating</option>
+                <option value="fee-low">Lowest Fee</option>
+                <option value="fee-high">Highest Fee</option>
+                <option value="experience">Most Experienced</option>
+              </select>
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 mt-4">
             <button
@@ -234,57 +275,58 @@ const DoctorSearch = () => {
 
         {/* Results */}
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b">
+          <div className="p-4 sm:p-6 border-b flex items-center justify-between">
             <h2 className="text-lg font-semibold">
               Found {filteredDoctors.length} {filteredDoctors.length === 1 ? 'doctor' : 'doctors'}
             </h2>
+            {filteredDoctors.length > 0 && (
+              <span className="text-sm text-gray-500">
+                Showing results {1}-{filteredDoctors.length}
+              </span>
+            )}
           </div>
 
-          <div className="divide-y">
-            {filteredDoctors.map((doctor) => (
-              <div key={doctor.id} className="p-4 sm:p-6 hover:bg-gray-50">
-                <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                  <img
-                    src={doctor.image}
-                    alt={doctor.name}
-                    className="w-16 h-16 rounded-full object-cover mx-auto sm:mx-0"
-                  />
-                  
-                  <div className="flex-1 text-center sm:text-left">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{doctor.name}</h3>
-                        <p className="text-blue-600 font-medium">{doctor.specialization}</p>
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 text-sm text-gray-600 space-y-1 sm:space-y-0">
-                          <div className="flex items-center justify-center sm:justify-start space-x-1">
-                            <MapPin className="h-4 w-4" />
-                            <span className="truncate">{doctor.hospital}, {doctor.location}</span>
-                          </div>
-                          <div className="flex items-center justify-center sm:justify-start space-x-1">
-                            <DollarSign className="h-4 w-4" />
-                            <span>LKR {doctor.fee}</span>
-                          </div>
-                          <div className="flex items-center justify-center sm:justify-start space-x-1">
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            <span>{doctor.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={() => handleBookAppointment(doctor.id)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full sm:w-auto whitespace-nowrap"
-                      >
-                        Book Appointment
-                      </button>
-                    </div>
-                  </div>
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 p-4' : 'divide-y'}>
+            {filteredDoctors.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="text-gray-400 mb-4">
+                  <Search size={48} className="mx-auto" />
                 </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No doctors found</h3>
+                <p className="text-gray-600 mb-4">Try adjusting your search criteria</p>
+                <button
+                  onClick={handleClearFilters}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Clear Filters
+                </button>
               </div>
-            ))}
+            ) : (
+              filteredDoctors.map((doctor) => (
+                <div key={doctor.id} className={viewMode === 'list' ? 'p-4 sm:p-6' : ''}>
+                  <DoctorCard 
+                    doctor={doctor} 
+                    onBook={handleBookAppointment}
+                    onViewDetails={handleViewDetails}
+                  />
+                </div>
+              ))
+            )}
           </div>
         </div>
+
+        {/* Advanced Filters Modal */}
+        <AdvancedFilters
+          isOpen={showAdvancedFilters}
+          onClose={() => setShowAdvancedFilters(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onApply={handleApplyFilters}
+          onReset={handleClearFilters}
+          specializations={specializations}
+          hospitals={hospitals}
+          locations={locations}
+        />
 
         {/* Booking Modal */}
         {bookingDoctorId && (
