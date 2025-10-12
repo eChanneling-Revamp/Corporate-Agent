@@ -128,7 +128,7 @@ const PaymentManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">LKR {totalRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">LKR {(totalRevenue || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ const PaymentManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Commission Earned</p>
-                <p className="text-2xl font-bold text-gray-900">LKR {totalCommission.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">LKR {(totalCommission || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ const PaymentManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending Amount</p>
-                <p className="text-2xl font-bold text-gray-900">LKR {pendingAmount.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">LKR {(pendingAmount || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@ const PaymentManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">LKR {payment.amount.toLocaleString()}</div>
+                        <div className="text-sm font-medium text-gray-900">LKR {(payment.amount || 0).toLocaleString()}</div>
                         <div className="text-sm text-gray-500">{payment.paymentMethod}</div>
                       </div>
                     </td>
@@ -280,7 +280,7 @@ const PaymentManagement = () => {
                       {payment.paymentDate}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      LKR {payment.commission.toLocaleString()}
+                      LKR {(payment.commission || payment.amount || 0).toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
                       {payment.status === 'Completed' && (

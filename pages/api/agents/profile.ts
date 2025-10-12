@@ -33,7 +33,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
 
+      console.log('Agents profile API: Agent found in database:', agent ? 'Yes' : 'No')
+
       if (!agent) {
+        console.log('Agents profile API: Agent not found in database for ID:', agentId)
         return res.status(404).json({ error: 'Agent not found' })
       }
 
