@@ -3,20 +3,29 @@ import apiClient from '../../services/authService'
 
 export interface Appointment {
   id: string
+  appointmentNumber: string
   patientName: string
   patientEmail?: string
   patientPhone?: string
-  doctorId: string
+  patientNIC?: string
+  doctorId?: string
   doctorName: string
-  specialization: string
-  hospital: string
-  date: string
-  time: string
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'payment_pending'
+  specialty: string
+  hospitalId?: string
+  hospitalName: string
+  sessionId?: string
+  sessionDate: string
+  sessionTime: string
+  appointmentType: string
+  status: string
+  paymentStatus: string
   amount: number
-  appointmentType: 'regular' | 'acb' | 'bulk'
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded'
-  notes?: string
+  agentId?: string
+  bulkBookingId?: string
+  cancellationReason?: string
+  cancelledAt?: string
+  refundAmount?: number
+  refundStatus?: string
   createdAt: string
   updatedAt: string
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useDispatch, useSelector } from 'react-redux'
 import Head from 'next/head'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
@@ -12,32 +13,47 @@ import { fetchAppointments } from '../store/slices/appointmentSlice'
 import { RootState } from '../store/store'
 
 export default function Dashboard() {
+  const { data: session, status } = useSession()
   const dispatch = useDispatch<any>()
   const { appointments } = useSelector((state: RootState) => state.appointments)
-  const { user } = useSelector((state: RootState) => state.auth)
   const [dashboardStats, setDashboardStats] = useState<any>({})
   const [statsLoading, setStatsLoading] = useState(true)
 
   useEffect(() => {
+    if (!session) return
+    
     dispatch(fetchAppointments({}))
     
     // Fetch dashboard statistics
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/dashboard/stats')
+        const response = await fetch('/api/dashboard/stats', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
         if (response.ok) {
           const stats = await response.json()
           setDashboardStats(stats)
+          console.log('Dashboard stats loaded successfully:', stats)
+        } else {
+          console.error('Dashboard stats API error:', response.status, response.statusText)
+          // Use fallback empty stats if API fails
+          setDashboardStats({})
         }
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error)
+        // Use fallback empty stats if fetch fails
+        setDashboardStats({})
       } finally {
         setStatsLoading(false)
       }
     }
     
     fetchStats()
-  }, [dispatch])
+  }, [dispatch, session])
 
   // Use real statistics from API or fallback to calculated values
   const todayAppointments = dashboardStats.todayAppointments || 0
@@ -80,6 +96,15 @@ export default function Dashboard() {
     }
   ]
 
+  // Handle loading and authentication states
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  }
+
+  if (!session) {
+    return <div className="flex items-center justify-center min-h-screen">Please login to access dashboard</div>
+  }
+
   return (
     <ProtectedRoute>
       <Head>
@@ -91,7 +116,7 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Welcome Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 sm:p-6 text-white">
-            <h1 className="text-xl sm:text-2xl font-bold">Welcome back, {user?.name}!</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">Welcome back, {session.user?.name || 'Agent'}!</h1>
             <p className="mt-1 text-blue-100 text-sm sm:text-base">
               Here's what's happening with your appointments today.
             </p>

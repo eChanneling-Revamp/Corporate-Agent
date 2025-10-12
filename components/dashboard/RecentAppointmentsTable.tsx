@@ -57,10 +57,10 @@ const RecentAppointmentsTable = () => {
       a.id,
       a.patientName,
       a.doctorName,
-      a.specialization,
-      a.date,
-      a.time,
-      a.hospital,
+      a.specialty,
+      a.sessionDate,
+      a.sessionTime,
+      a.hospitalName,
       a.status,
       `Rs ${a.amount}`
     ])
@@ -165,17 +165,17 @@ const RecentAppointmentsTable = () => {
                 <td className="px-4 py-3 text-sm text-gray-800">
                   <div>{appointment.doctorName}</div>
                   <div className="text-xs text-gray-500">
-                    {appointment.specialization}
+                    {appointment.specialty}
                   </div>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                  <div>{appointment.date}</div>
+                  <div>{appointment.sessionDate}</div>
                   <div className="text-xs text-gray-500">
-                    {appointment.time}
+                    {appointment.sessionTime}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-800">
-                  {appointment.hospital}
+                  {appointment.hospitalName}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {getStatusBadge(appointment.status)}

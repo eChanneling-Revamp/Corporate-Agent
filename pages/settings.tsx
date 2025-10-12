@@ -39,7 +39,13 @@ const Settings = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/agents/profile');
+        const response = await fetch('/api/agents/profile', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           const agent = data.agent;
@@ -73,6 +79,7 @@ const Settings = () => {
     try {
       const response = await fetch('/api/agents/profile', {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },

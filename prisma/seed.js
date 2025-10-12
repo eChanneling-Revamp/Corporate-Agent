@@ -29,6 +29,26 @@ async function main() {
     
     console.log('✅ Created test agent:', agent.email)
     
+    // Create another agent that matches Google OAuth user for testing
+    const googleAgent = await prisma.agent.upsert({
+      where: { email: 'ojitharajapaksha@gmail.com' },
+      update: {},
+      create: {
+        agentType: 'CORPORATE',
+        companyName: 'OAuth Test Company Ltd',
+        registrationNumber: 'REG002', 
+        contactPerson: 'Ojitha Rajapaksha',
+        email: 'ojitharajapaksha@gmail.com',
+        phone: '+94771234568',
+        address: '456 OAuth Street, Colombo 02',
+        username: 'oauth_agent',
+        password: hashedPassword,
+        status: 'ACTIVE'
+      }
+    })
+    
+    console.log('✅ Created Google OAuth agent:', googleAgent.email)
+    
     // Create a branch for the agent
     const branch = await prisma.branch.create({
       data: {

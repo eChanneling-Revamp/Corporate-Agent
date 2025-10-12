@@ -16,17 +16,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` })
     }
 
-    // Get agent ID
-    const agent = await prisma.agent.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    })
+    console.log('Reports analytics API called')
+    console.log('Session user:', session.user)
 
-    if (!agent) {
+    // Use agent ID directly from session like the working appointments API
+    const agentId = (session.user as any).id
+    
+    if (!agentId) {
+      console.log('Reports analytics API: No agent ID in session')
       return res.status(404).json({ error: 'Agent not found' })
     }
 
-    const agentId = agent.id
+    console.log('Reports analytics API: Using agent ID from session:', agentId)
 
     // Get the last 6 months for monthly chart data
     const monthlyData = []

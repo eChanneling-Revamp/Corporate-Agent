@@ -1,23 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { useDispatch, useSelector } from 'react-redux'
+import { signIn, useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react'
-import { loginUser, clearError } from '../../store/slices/authSlice'
-import { RootState } from '../../store/store'
 
 interface LoginFormData {
-  email: string
+  username: string
   password: string
   rememberMe: boolean
 }
 
 export default function Login() {
   const router = useRouter()
-  const dispatch = useDispatch<any>()
-  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth)
+  const { data: session } = useSession()
+  const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   
   const {
@@ -27,29 +25,31 @@ export default function Login() {
   } = useForm<LoginFormData>()
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (session) {
       router.push('/dashboard')
     }
-  }, [isAuthenticated, router])
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error)
-      dispatch(clearError())
-    }
-  }, [error, dispatch])
+  }, [session, router])
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await dispatch(loginUser({
-        email: data.email,
-        password: data.password,
-      })).unwrap()
+      setIsLoading(true)
       
-      toast.success('Login successful!')
-      router.push('/dashboard')
+      const result = await signIn('credentials', {
+        username: data.username,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        toast.error(result.error)
+      } else if (result?.ok) {
+        toast.success('Login successful!')
+        router.push('/dashboard')
+      }
     } catch (error) {
-      // Error is handled by useEffect above
+      toast.error('An error occurred during login')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -80,28 +80,24 @@ export default function Login() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Username
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address',
-                    },
+                  {...register('username', {
+                    required: 'Username is required',
                   })}
-                  type="email"
-                  className={`input pl-10 ${errors.email ? 'input-error' : ''}`}
-                  placeholder="agent@gmail.com"
+                  type="text"
+                  className={`input pl-10 ${errors.username ? 'input-error' : ''}`}
+                  placeholder="demo_agent"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              {errors.username && (
+                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
               )}
             </div>
 

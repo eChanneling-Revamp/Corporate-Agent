@@ -5,9 +5,12 @@ import { prisma } from '../../../lib/prisma'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    console.log('Dashboard stats API called')
     const session = await getServerSession(req, res, authOptions)
+    console.log('Session:', session ? 'Found' : 'Not found')
     
     if (!session?.user?.email) {
+      console.log('No session or email found, returning 401')
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
@@ -16,17 +19,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` })
     }
 
-    // Get agent ID
-    const agent = await prisma.agent.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    })
-
-    if (!agent) {
+    console.log('Dashboard stats API called')
+    console.log('Session user:', session.user)
+    
+    // Use agent ID directly from session like the working appointments API
+    const agentId = (session.user as any).id
+    
+    if (!agentId) {
+      console.log('Dashboard stats API: No agent ID in session')
       return res.status(404).json({ error: 'Agent not found' })
     }
 
-    const agentId = agent.id
+    console.log('Dashboard stats API: Using agent ID from session:', agentId)
 
     // Get current date ranges
     const today = new Date()
@@ -37,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    console.log('Date ranges calculated')
 
     // Get today's appointments
     const todayAppointments = await prisma.appointment.count({
@@ -109,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? ((currentRevenue - previousRevenue) / previousRevenue * 100).toFixed(1)
       : currentRevenue > 0 ? '100' : '0'
 
-    return res.status(200).json({
+    const responseData = {
       todayAppointments,
       pendingConfirmations,
       monthlyRevenue: currentRevenue,
@@ -119,7 +124,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         totalAppointments: todayAppointments + pendingConfirmations,
         totalRevenue: currentRevenue
       }
-    })
+    }
+
+    console.log('About to return dashboard stats:', responseData)
+    return res.status(200).json(responseData)
     
   } catch (error) {
     console.error('Dashboard stats API Error:', error)

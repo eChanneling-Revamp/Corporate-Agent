@@ -12,9 +12,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'GET') {
-      // Get agent profile by email
+      console.log('Agents profile API called (GET)')
+      console.log('Session user:', session.user)
+
+      // Use agent ID directly from session like the working appointments API
+      const agentId = (session.user as any).id
+      
+      if (!agentId) {
+        console.log('Agents profile API: No agent ID in session')
+        return res.status(404).json({ error: 'Agent not found' })
+      }
+
+      console.log('Agents profile API: Using agent ID from session:', agentId)
+
+      // Get agent profile by ID
       const agent = await prisma.agent.findUnique({
-        where: { email: session.user.email },
+        where: { id: agentId },
         include: {
           branches: true,
         }
@@ -27,10 +40,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Remove sensitive data
       const { password, ...safeAgent } = agent
       
+      console.log('Agents profile API: Returning agent profile')
       return res.status(200).json({ agent: safeAgent })
     }
 
     if (req.method === 'PUT') {
+      console.log('Agents profile API called (PUT)')
+      
+      const agentId = (session.user as any).id
+      if (!agentId) {
+        return res.status(404).json({ error: 'Agent not found' })
+      }
+
       const {
         contactPerson,
         phone,
@@ -39,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } = req.body
 
       const agent = await prisma.agent.update({
-        where: { email: session.user.email },
+        where: { id: agentId },
         data: {
           contactPerson,
           phone,

@@ -17,6 +17,10 @@ interface Doctor {
   rating: number;
   availability: string[];
   image: string;
+  experience: number;
+  qualifications: string;
+  bio?: string;
+  totalReviews: number;
 }
 
 const DoctorSearch = () => {
@@ -34,6 +38,7 @@ const DoctorSearch = () => {
   // Booking modal state
   const [bookingDoctorId, setBookingDoctorId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState('');
+  const [patientPhone, setPatientPhone] = useState('');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
@@ -83,20 +88,59 @@ const DoctorSearch = () => {
     setBookingDoctorId(doctorId);
   };
 
-  const submitBooking = () => {
-    if (!patientName || !bookingDate || !bookingTime) {
+  const submitBooking = async () => {
+    if (!patientName || !patientPhone || !bookingDate || !bookingTime) {
       toast.error('Please fill all booking details');
       return;
     }
 
     const doctor = filteredDoctors.find(d => d.id === bookingDoctorId);
-    toast.success(`Appointment booked with ${doctor?.name} for ${patientName}`);
-    
-    // Reset form
-    setBookingDoctorId(null);
-    setPatientName('');
-    setBookingDate('');
-    setBookingTime('');
+    if (!doctor) {
+      toast.error('Doctor not found');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/appointments/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          doctorId: doctor.id,
+          doctorName: doctor.name,
+          hospitalName: doctor.hospital,
+          specialty: doctor.specialization,
+          sessionDate: bookingDate,
+          sessionTime: bookingTime,
+          patientName: patientName,
+          patientPhone: patientPhone,
+          amount: doctor.fee,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(`Appointment booked successfully! Reference: ${result.appointmentNumber}`);
+        
+        // Reset form
+        setBookingDoctorId(null);
+        setPatientName('');
+        setPatientPhone('');
+        setBookingDate('');
+        setBookingTime('');
+        
+        // Optionally redirect to appointments page
+        router.push('/appointments');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to book appointment');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error('Failed to book appointment');
+    }
   };
 
   return (
@@ -272,6 +316,18 @@ const DoctorSearch = () => {
                     value={patientName}
                     onChange={(e) => setPatientName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter patient full name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Patient Phone</label>
+                  <input
+                    type="tel"
+                    value={patientPhone}
+                    onChange={(e) => setPatientPhone(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter patient phone number"
                   />
                 </div>
                 

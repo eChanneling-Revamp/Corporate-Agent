@@ -50,7 +50,7 @@ export default function ACBConfirmation() {
                          appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          appointment.id.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesDate = !filterDate || appointment.date === filterDate
+    const matchesDate = !filterDate || appointment.sessionDate === filterDate
     
     return matchesSearch && matchesDate
   })
@@ -182,10 +182,10 @@ export default function ACBConfirmation() {
                               <span className="font-medium">ID:</span> {appointment.id}
                             </p>
                             <p className="text-sm">
-                              <span className="font-medium">Date:</span> {appointment.date}
+                              <span className="font-medium">Date:</span> {appointment.sessionDate}
                             </p>
                             <p className="text-sm">
-                              <span className="font-medium">Time:</span> {appointment.time}
+                              <span className="font-medium">Time:</span> {appointment.sessionTime}
                             </p>
                             <div className="flex items-center">
                               <span className="badge badge-warning">ACB Pending</span>
@@ -203,10 +203,10 @@ export default function ACBConfirmation() {
                           </div>
                           <div className="pl-6 space-y-1">
                             <p className="font-semibold text-lg">{appointment.doctorName}</p>
-                            <p className="text-sm text-gray-600">{appointment.specialization}</p>
+                            <p className="text-sm text-gray-600">{appointment.specialty}</p>
                             <div className="flex items-center text-sm text-gray-600">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {appointment.hospital}
+                              {appointment.hospitalName}
                             </div>
                           </div>
                         </div>
@@ -245,14 +245,7 @@ export default function ACBConfirmation() {
                     </div>
                   </div>
 
-                  {/* Additional Notes */}
-                  {appointment.notes && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Notes:</span> {appointment.notes}
-                      </p>
-                    </div>
-                  )}
+                  {/* Additional Notes - Removed for now */}
                 </div>
               ))}
             </div>

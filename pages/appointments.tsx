@@ -3,10 +3,12 @@ import { Search, Filter, Download, Send, Trash2, Check, Clock, AlertTriangle, XC
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { RootState } from '../store/store';
+import { fetchAppointments } from '../store/slices/appointmentSlice';
 import DashboardLayout from '../components/layout/DashboardLayout';
 
 interface Appointment {
   id: string;
+  appointmentNumber: string;
   patientName: string;
   doctorName: string;
   hospitalName: string;
@@ -14,8 +16,8 @@ interface Appointment {
   sessionTime: string;
   status: string;
   amount: number;
-  appointmentNumber: string;
   paymentStatus: string;
+  specialty?: string;
 }
 
 const AppointmentManagement = () => {
@@ -53,6 +55,76 @@ const AppointmentManagement = () => {
   useEffect(() => { 
     setPage(1); 
   }, [filteredAppointments, pageSize]);
+
+  // CRUD Operations
+  const handleViewAppointment = (appointment: Appointment) => {
+    toast.success(`Viewing appointment: ${appointment.appointmentNumber}`);
+    // TODO: Open appointment details modal or navigate to detail page
+  };
+
+  const handleEditAppointment = (appointment: Appointment) => {
+    toast.success(`Editing appointment: ${appointment.appointmentNumber}`);
+    // TODO: Open edit modal or navigate to edit page
+  };
+
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+      try {
+        const response = await fetch(`/api/appointments/${appointmentId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          toast.success('Appointment cancelled successfully');
+          dispatch(fetchAppointments({})); // Refresh the list
+        } else {
+          throw new Error('Failed to cancel appointment');
+        }
+      } catch (error) {
+        toast.error('Failed to cancel appointment');
+        console.error('Delete error:', error);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedAppointments.length === 0) {
+      toast.error('Please select appointments to cancel');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to cancel ${selectedAppointments.length} appointment(s)?`)) {
+      try {
+        const promises = selectedAppointments.map(id => 
+          fetch(`/api/appointments/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        );
+        
+        await Promise.all(promises);
+        toast.success(`${selectedAppointments.length} appointment(s) cancelled successfully`);
+        setSelectedAppointments([]);
+        setSelectAll(false);
+        dispatch(fetchAppointments({})); // Refresh the list
+      } catch (error) {
+        toast.error('Failed to cancel some appointments');
+        console.error('Bulk delete error:', error);
+      }
+    }
+  };
+
+  const handleCreateNewAppointment = () => {
+    // Navigate to doctor search to create new appointment
+    window.location.href = '/doctor-search';
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status.toUpperCase()) {
@@ -128,8 +200,18 @@ const AppointmentManagement = () => {
     <DashboardLayout>
       <div className="p-6">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Appointment Management</h1>
-          <p className="text-gray-600 text-sm sm:text-base">Manage and track all your appointments</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Appointment Management</h1>
+              <p className="text-gray-600 text-sm sm:text-base">Manage and track all your appointments</p>
+            </div>
+            <button
+              onClick={handleCreateNewAppointment}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              + New Appointment
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -188,7 +270,7 @@ const AppointmentManagement = () => {
                   <span>Send SMS</span>
                 </button>
                 <button
-                  onClick={handleCancelAppointments}
+                  onClick={handleBulkDelete}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 flex items-center space-x-1"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -277,11 +359,26 @@ const AppointmentManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          onClick={() => handleViewAppointment(appointment)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="View Details"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleEditAppointment(appointment)}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="Edit Appointment"
+                        >
                           <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAppointment(appointment.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Cancel Appointment"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>

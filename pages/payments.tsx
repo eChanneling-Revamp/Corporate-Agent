@@ -31,7 +31,13 @@ const PaymentManagement = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await fetch('/api/transactions');
+        const response = await fetch('/api/transactions', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setTransactions(data.transactions || []);

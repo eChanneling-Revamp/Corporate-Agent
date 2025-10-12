@@ -13,7 +13,13 @@ const Reports = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await fetch('/api/reports/analytics');
+        const response = await fetch('/api/reports/analytics', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setAnalyticsData(data);

@@ -9,15 +9,13 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
-// Request interceptor to add auth token
+// Request interceptor - NextAuth handles session cookies automatically
 apiClient.interceptors.request.use(
   (config) => {
-    const token = Cookies.get('authToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    // No need for manual token handling with NextAuth
     return config
   },
   (error) => {
@@ -25,35 +23,14 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Response interceptor to handle token refresh
+// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      
-      try {
-        const refreshToken = Cookies.get('refreshToken')
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          })
-          
-          const { token } = response.data
-          Cookies.set('authToken', token)
-          
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          return apiClient(originalRequest)
-        }
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
-        Cookies.remove('authToken')
-        Cookies.remove('refreshToken')
-        window.location.href = '/auth/login'
-      }
+    // NextAuth handles authentication automatically
+    if (error.response?.status === 401) {
+      // Redirect to login or refresh the page to trigger NextAuth
+      window.location.href = '/auth/login'
     }
     
     return Promise.reject(error)
