@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Download, Calendar, TrendingUp, Users, DollarSign, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -7,31 +7,31 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 const Reports = () => {
   const [reportType, setReportType] = useState('overview');
   const [dateRange, setDateRange] = useState('month');
+  const [analyticsData, setAnalyticsData] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data for charts
-  const appointmentData = [
-    { name: 'Jan', appointments: 65, revenue: 45000 },
-    { name: 'Feb', appointments: 59, revenue: 38000 },
-    { name: 'Mar', appointments: 80, revenue: 52000 },
-    { name: 'Apr', appointments: 81, revenue: 58000 },
-    { name: 'May', appointments: 56, revenue: 42000 },
-    { name: 'Jun', appointments: 55, revenue: 39000 },
-  ];
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/reports/analytics');
+        if (response.ok) {
+          const data = await response.json();
+          setAnalyticsData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const specialtyData = [
-    { name: 'Cardiology', value: 35, color: '#8884d8' },
-    { name: 'Neurology', value: 25, color: '#82ca9d' },
-    { name: 'Pediatrics', value: 20, color: '#ffc658' },
-    { name: 'Orthopedics', value: 15, color: '#ff7c7c' },
-    { name: 'Others', value: 5, color: '#8dd1e1' },
-  ];
+    fetchAnalytics();
+  }, []);
 
-  const hospitalData = [
-    { name: 'City General', appointments: 45, revenue: 32000 },
-    { name: 'National Hospital', appointments: 38, revenue: 28000 },
-    { name: 'Private Medical', appointments: 32, revenue: 24000 },
-    { name: 'Children\'s Hospital', appointments: 28, revenue: 18000 },
-  ];
+  // Use real data from API or fallback to empty arrays
+  const appointmentData = analyticsData.monthlyData || [];
+  const specialtyData = analyticsData.specialtyData || [];
+  const hospitalData = analyticsData.hospitalData || [];
 
   const handleExportReport = () => {
     toast.success('Report exported successfully');

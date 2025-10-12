@@ -356,6 +356,79 @@ enum NotificationPriority {
   URGENT
 }
 
+// Doctor Model
+model Doctor {
+  id              String   @id @default(cuid())
+  
+  // Doctor Information
+  name            String
+  specialization  String
+  qualifications  String
+  experience      String
+  
+  // Hospital & Location
+  hospital        String
+  hospitalId      String?
+  location        String
+  
+  // Consultation Details
+  fee             Float
+  consultationTypes String[] // REGULAR, TELE, CHAT, VIDEO
+  
+  // Availability
+  availableSlots  Json // Array of time slots
+  workingDays     String[] // MON, TUE, WED, etc.
+  
+  // Ratings & Reviews
+  rating          Float    @default(0)
+  totalReviews    Int      @default(0)
+  
+  // Profile
+  image           String?
+  bio             String?
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([specialization])
+  @@index([hospital])
+  @@index([isActive])
+}
+
+// Hospital Model
+model Hospital {
+  id              String   @id @default(cuid())
+  
+  // Hospital Information
+  name            String
+  address         String
+  city            String
+  phone           String
+  email           String?
+  
+  // Location
+  latitude        Float?
+  longitude       Float?
+  
+  // Services
+  specialties     String[]
+  facilities      Json?
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([city])
+  @@index([isActive])
+}
+
 // Audit Log Model
 model AuditLog {
   id              String   @id @default(cuid())

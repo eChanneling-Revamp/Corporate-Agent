@@ -8,7 +8,7 @@ import { searchDoctors, clearFilters } from '../store/slices/doctorSlice';
 import DashboardLayout from '../components/layout/DashboardLayout';
 
 interface Doctor {
-  id: number;
+  id: string;
   name: string;
   specialization: string;
   hospital: string;
@@ -32,66 +32,38 @@ const DoctorSearch = () => {
   const [feeMax, setFeeMax] = useState<number | ''>('');
 
   // Booking modal state
-  const [bookingDoctorId, setBookingDoctorId] = useState<number | null>(null);
+  const [bookingDoctorId, setBookingDoctorId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState('');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
-  // Mock data for demonstration
-  const mockDoctors: Doctor[] = [
-    {
-      id: 1,
-      name: 'Dr. Sarah Johnson',
-      specialization: 'Cardiologist',
-      hospital: 'City General Hospital',
-      location: 'Colombo 03',
-      fee: 3500,
-      rating: 4.8,
-      availability: ['2024-01-15 09:00', '2024-01-15 14:00', '2024-01-16 10:00'],
-      image: '/api/placeholder/150/150'
-    },
-    {
-      id: 2,
-      name: 'Dr. Michael Chen',
-      specialization: 'Neurologist',
-      hospital: 'National Hospital',
-      location: 'Colombo 10',
-      fee: 4000,
-      rating: 4.9,
-      availability: ['2024-01-15 11:00', '2024-01-16 09:00', '2024-01-17 15:00'],
-      image: '/api/placeholder/150/150'
-    },
-    {
-      id: 3,
-      name: 'Dr. Emily Davis',
-      specialization: 'Pediatrician',
-      hospital: 'Children\'s Hospital',
-      location: 'Nugegoda',
-      fee: 2800,
-      rating: 4.7,
-      availability: ['2024-01-15 08:00', '2024-01-15 16:00', '2024-01-16 14:00'],
-      image: '/api/placeholder/150/150'
-    }
-  ];
-
-  const specializations = useMemo(() => Array.from(new Set(mockDoctors.map(d => d.specialization))), []);
-  const hospitals = useMemo(() => Array.from(new Set(mockDoctors.map(d => d.hospital))), []);
-
-  const filteredDoctors = useMemo(() => {
-    return mockDoctors.filter(doctor => {
-      const matchesQuery = !query || 
-        doctor.name.toLowerCase().includes(query.toLowerCase()) ||
-        doctor.specialization.toLowerCase().includes(query.toLowerCase()) ||
-        doctor.hospital.toLowerCase().includes(query.toLowerCase());
+  // Load doctors from API
+  useEffect(() => {
+    const loadDoctors = async () => {
+      const params = new URLSearchParams();
+      if (query) params.append('search', query);
+      if (specialization) params.append('specialization', specialization);
+      if (hospital) params.append('hospital', hospital);
+      if (feeMin !== '') params.append('minFee', feeMin.toString());
+      if (feeMax !== '') params.append('maxFee', feeMax.toString());
       
-      const matchesSpecialization = !specialization || doctor.specialization === specialization;
-      const matchesHospital = !hospital || doctor.hospital === hospital;
-      const matchesFeeMin = feeMin === '' || doctor.fee >= Number(feeMin);
-      const matchesFeeMax = feeMax === '' || doctor.fee <= Number(feeMax);
+      dispatch(searchDoctors(params.toString()));
+    };
 
-      return matchesQuery && matchesSpecialization && matchesHospital && matchesFeeMin && matchesFeeMax;
-    });
-  }, [query, specialization, hospital, feeMin, feeMax]);
+    loadDoctors();
+  }, [dispatch, query, specialization, hospital, feeMin, feeMax]);
+
+  const specializations = useMemo(() => {
+    if (!doctors || doctors.length === 0) return [];
+    return Array.from(new Set(doctors.map(d => d.specialization)));
+  }, [doctors]);
+  
+  const hospitals = useMemo(() => {
+    if (!doctors || doctors.length === 0) return [];
+    return Array.from(new Set(doctors.map(d => d.hospital)));
+  }, [doctors]);
+
+  const filteredDoctors = doctors || [];
 
   const handleSearch = () => {
     // In a real app, this would trigger an API call
@@ -107,7 +79,7 @@ const DoctorSearch = () => {
     setFeeMax('');
   };
 
-  const handleBookAppointment = (doctorId: number) => {
+  const handleBookAppointment = (doctorId: string) => {
     setBookingDoctorId(doctorId);
   };
 
@@ -117,7 +89,7 @@ const DoctorSearch = () => {
       return;
     }
 
-    const doctor = mockDoctors.find(d => d.id === bookingDoctorId);
+    const doctor = filteredDoctors.find(d => d.id === bookingDoctorId);
     toast.success(`Appointment booked with ${doctor?.name} for ${patientName}`);
     
     // Reset form

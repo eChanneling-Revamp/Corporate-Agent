@@ -10,11 +10,12 @@ interface Appointment {
   patientName: string;
   doctorName: string;
   hospitalName: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  status: 'Confirmed' | 'Pending' | 'Payment Failed' | 'Cancelled';
-  fee: number;
-  referenceNumber: string;
+  sessionDate: string;
+  sessionTime: string;
+  status: string;
+  amount: number;
+  appointmentNumber: string;
+  paymentStatus: string;
 }
 
 const AppointmentManagement = () => {
@@ -28,61 +29,18 @@ const AppointmentManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Mock data for demonstration
-  const mockAppointments: Appointment[] = [
-    {
-      id: 'APT001',
-      patientName: 'John Silva',
-      doctorName: 'Dr. Sarah Johnson',
-      hospitalName: 'City General Hospital',
-      appointmentDate: '2024-01-15',
-      appointmentTime: '09:00 AM',
-      status: 'Confirmed',
-      fee: 3500,
-      referenceNumber: 'REF001'
-    },
-    {
-      id: 'APT002',
-      patientName: 'Mary Fernando',
-      doctorName: 'Dr. Michael Chen',
-      hospitalName: 'National Hospital',
-      appointmentDate: '2024-01-16',
-      appointmentTime: '11:00 AM',
-      status: 'Pending',
-      fee: 4000,
-      referenceNumber: 'REF002'
-    },
-    {
-      id: 'APT003',
-      patientName: 'David Perera',
-      doctorName: 'Dr. Emily Davis',
-      hospitalName: 'Children\'s Hospital',
-      appointmentDate: '2024-01-14',
-      appointmentTime: '02:00 PM',
-      status: 'Payment Failed',
-      fee: 2800,
-      referenceNumber: 'REF003'
-    },
-    {
-      id: 'APT004',
-      patientName: 'Lisa Jayawardena',
-      doctorName: 'Dr. Robert Wilson',
-      hospitalName: 'Private Medical Center',
-      appointmentDate: '2024-01-13',
-      appointmentTime: '04:00 PM',
-      status: 'Cancelled',
-      fee: 3200,
-      referenceNumber: 'REF004'
-    }
-  ];
+  // Load appointments from Redux store
+  useEffect(() => {
+    dispatch(fetchAppointments({}));
+  }, [dispatch]);
 
-  const filteredAppointments = mockAppointments.filter(appointment => {
+  const filteredAppointments = (appointments || []).filter((appointment: any) => {
     const matchesSearch = !searchQuery || 
       appointment.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       appointment.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      appointment.appointmentNumber.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = !statusFilter || appointment.status === statusFilter;
+    const matchesStatus = !statusFilter || appointment.status.toLowerCase().includes(statusFilter.toLowerCase());
     
     return matchesSearch && matchesStatus;
   });
@@ -97,22 +55,26 @@ const AppointmentManagement = () => {
   }, [filteredAppointments, pageSize]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
+    switch (status.toUpperCase()) {
+      case 'CONFIRMED':
         return <span className="flex items-center text-green-700 bg-green-50 rounded-full px-2 py-1 text-xs font-medium">
-            <Check size={12} className="mr-1" /> {status}
+            <Check size={12} className="mr-1" /> Confirmed
           </span>;
-      case 'Pending':
+      case 'PENDING':
         return <span className="flex items-center text-amber-700 bg-amber-50 rounded-full px-2 py-1 text-xs font-medium">
-            <Clock size={12} className="mr-1" /> {status}
+            <Clock size={12} className="mr-1" /> Pending
           </span>;
-      case 'Payment Failed':
-        return <span className="flex items-center text-red-700 bg-red-50 rounded-full px-2 py-1 text-xs font-medium">
-            <AlertTriangle size={12} className="mr-1" /> {status}
-          </span>;
-      case 'Cancelled':
+      case 'CANCELLED':
         return <span className="flex items-center text-gray-700 bg-gray-100 rounded-full px-2 py-1 text-xs font-medium">
-            <XCircle size={12} className="mr-1" /> {status}
+            <XCircle size={12} className="mr-1" /> Cancelled
+          </span>;
+      case 'COMPLETED':
+        return <span className="flex items-center text-blue-700 bg-blue-50 rounded-full px-2 py-1 text-xs font-medium">
+            <Check size={12} className="mr-1" /> Completed
+          </span>;
+      case 'NO_SHOW':
+        return <span className="flex items-center text-red-700 bg-red-50 rounded-full px-2 py-1 text-xs font-medium">
+            <AlertTriangle size={12} className="mr-1" /> No Show
           </span>;
       default:
         return <span className="flex items-center text-gray-700 bg-gray-100 rounded-full px-2 py-1 text-xs font-medium">
@@ -292,7 +254,7 @@ const AppointmentManagement = () => {
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{appointment.patientName}</div>
-                        <div className="text-sm text-gray-500">{appointment.referenceNumber}</div>
+                        <div className="text-sm text-gray-500">{appointment.appointmentNumber}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -303,15 +265,15 @@ const AppointmentManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm text-gray-900">{appointment.appointmentDate}</div>
-                        <div className="text-sm text-gray-500">{appointment.appointmentTime}</div>
+                        <div className="text-sm text-gray-900">{new Date(appointment.sessionDate).toLocaleDateString()}</div>
+                        <div className="text-sm text-gray-500">{appointment.sessionTime}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(appointment.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      LKR {appointment.fee.toLocaleString()}
+                      LKR {appointment.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">

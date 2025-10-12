@@ -57,9 +57,10 @@ export const fetchDoctors = createAsyncThunk(
 
 export const searchDoctors = createAsyncThunk(
   'doctors/searchDoctors',
-  async (searchParams: any, { rejectWithValue }) => {
+  async (searchParams: string, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/doctors/search', { params: searchParams })
+      const url = searchParams ? `/doctors?${searchParams}` : '/doctors'
+      const response = await apiClient.get(url)
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Search failed')
@@ -122,6 +123,7 @@ const doctorSlice = createSlice({
       })
       .addCase(searchDoctors.fulfilled, (state, action) => {
         state.isLoading = false
+        state.doctors = action.payload.doctors || []
         state.filteredDoctors = action.payload.doctors || []
       })
       .addCase(searchDoctors.rejected, (state, action) => {

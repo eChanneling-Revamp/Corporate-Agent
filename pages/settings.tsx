@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, User, Bell, Shield, Globe, CreditCard, Mail, Phone, Building } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../components/layout/DashboardLayout';
@@ -7,11 +7,11 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     // Profile settings
-    name: 'Demo Agent',
-    email: 'agent@gmail.com',
-    phone: '+94771234567',
-    companyName: 'Demo Company',
-    address: '123 Main Street, Colombo 03',
+    name: '',
+    email: '',
+    phone: '',
+    companyName: '',
+    address: '',
     
     // Notification settings
     emailNotifications: true,
@@ -34,6 +34,33 @@ const Settings = () => {
     accountNumber: '****1234',
     accountName: 'Demo Company'
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/agents/profile');
+        if (response.ok) {
+          const data = await response.json();
+          const agent = data.agent;
+          setFormData(prev => ({
+            ...prev,
+            name: agent.contactPerson || '',
+            email: agent.email || '',
+            phone: agent.phone || '',
+            companyName: agent.companyName || '',
+            address: agent.address || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -42,8 +69,30 @@ const Settings = () => {
     }));
   };
 
-  const handleSave = () => {
-    toast.success('Settings saved successfully');
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/agents/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contactPerson: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          companyName: formData.companyName
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Settings saved successfully');
+      } else {
+        toast.error('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save settings');
+    }
   };
 
   const tabs = [

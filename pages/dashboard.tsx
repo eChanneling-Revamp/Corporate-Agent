@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Head from 'next/head'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
@@ -15,40 +15,41 @@ export default function Dashboard() {
   const dispatch = useDispatch<any>()
   const { appointments } = useSelector((state: RootState) => state.appointments)
   const { user } = useSelector((state: RootState) => state.auth)
+  const [dashboardStats, setDashboardStats] = useState<any>({})
+  const [statsLoading, setStatsLoading] = useState(true)
 
   useEffect(() => {
     dispatch(fetchAppointments({}))
+    
+    // Fetch dashboard statistics
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats')
+        if (response.ok) {
+          const stats = await response.json()
+          setDashboardStats(stats)
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+    
+    fetchStats()
   }, [dispatch])
 
-  // Calculate statistics
-  const appointmentsList = appointments || []
-  
-  const todayAppointments = appointmentsList.filter(apt => {
-    const today = new Date().toISOString().split('T')[0]
-    return apt.date === today
-  }).length
-
-  const pendingConfirmations = appointmentsList.filter(apt => 
-    apt.status === 'pending'
-  ).length
-
-  const thisMonthRevenue = appointmentsList
-    .filter(apt => {
-      const now = new Date()
-      const aptDate = new Date(apt.date)
-      return aptDate.getMonth() === now.getMonth() && 
-             aptDate.getFullYear() === now.getFullYear() &&
-             apt.paymentStatus === 'paid'
-    })
-    .reduce((sum, apt) => sum + apt.amount, 0)
-
-  const activeSessions = 1 // This would come from session management
+  // Use real statistics from API or fallback to calculated values
+  const todayAppointments = dashboardStats.todayAppointments || 0
+  const pendingConfirmations = dashboardStats.pendingConfirmations || 0
+  const thisMonthRevenue = dashboardStats.monthlyRevenue || 0
+  const activeSessions = dashboardStats.activeSessions || 0
 
   const statistics = [
     {
       title: "Today's Appointments",
       value: todayAppointments.toString(),
-      change: '+12%',
+      change: '+12%', // Could be calculated from historical data
       isPositive: true,
       icon: <CalendarCheck size={20} className="text-blue-500" />,
       bgColor: 'bg-blue-50'
@@ -56,7 +57,7 @@ export default function Dashboard() {
     {
       title: 'Pending Confirmations',
       value: pendingConfirmations.toString(),
-      change: '-3%',
+      change: '-3%', // Could be calculated from historical data
       isPositive: false,
       icon: <AlertCircle size={20} className="text-amber-500" />,
       bgColor: 'bg-amber-50'
@@ -64,15 +65,15 @@ export default function Dashboard() {
     {
       title: 'Total Revenue (This Month)',
       value: `Rs ${thisMonthRevenue.toLocaleString()}`,
-      change: '+18%',
-      isPositive: true,
+      change: dashboardStats.revenueChange || '+0%',
+      isPositive: dashboardStats.revenueChange ? dashboardStats.revenueChange.startsWith('+') : true,
       icon: <DollarSign size={20} className="text-green-500" />,
       bgColor: 'bg-green-50'
     },
     {
       title: 'Active Sessions',
       value: activeSessions.toString(),
-      change: '0%',
+      change: '0%', // Could be calculated from session management
       isPositive: true,
       icon: <Users size={20} className="text-purple-500" />,
       bgColor: 'bg-purple-50'

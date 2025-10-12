@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
+import { prisma } from '../../../lib/prisma';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,47 +14,92 @@ export default async function handler(
 
   if (req.method === 'GET') {
     try {
-      // Return mock doctors data for now
-      // In production, this would fetch from a doctors database or external service
-      const doctors = [
-        {
-          id: 'doc-001',
-          name: 'Dr. Sarah Johnson',
-          specialty: 'Cardiology',
-          hospital: 'City General Hospital',
-          consultationFee: 3500,
-          availableSlots: ['09:00', '10:00', '11:00', '14:00', '15:00'],
-          rating: 4.8,
-          experience: '15 years',
-          qualifications: 'MBBS, MD (Cardiology)'
-        },
-        {
-          id: 'doc-002',
-          name: 'Dr. Michael Chen',
-          specialty: 'Neurology',
-          hospital: 'National Hospital',
-          consultationFee: 4000,
-          availableSlots: ['08:00', '09:00', '16:00', '17:00'],
-          rating: 4.9,
-          experience: '12 years',
-          qualifications: 'MBBS, MD (Neurology)'
-        },
-        {
-          id: 'doc-003',
-          name: 'Dr. Emily Davis',
-          specialty: 'Pediatrics',
-          hospital: 'Children\'s Hospital',
-          consultationFee: 2800,
-          availableSlots: ['10:00', '11:00', '14:00', '15:00', '16:00'],
-          rating: 4.7,
-          experience: '10 years',
-          qualifications: 'MBBS, MD (Pediatrics)'
-        }
-      ];
+      const { 
+        search, 
+        specialization, 
+        hospital, 
+        minFee, 
+        maxFee, 
+        page = 1, 
+        limit = 10 
+      } = req.query;
+
+      // Build where conditions
+      const where: any = {
+        isActive: true
+      };
+
+      if (search) {
+        where.OR = [
+          { name: { contains: search as string, mode: 'insensitive' } },
+          { specialization: { contains: search as string, mode: 'insensitive' } },
+          { hospital: { contains: search as string, mode: 'insensitive' } }
+        ];
+      }
+
+      if (specialization) {
+        where.specialization = {
+          equals: specialization as string,
+          mode: 'insensitive'
+        };
+      }
+
+      if (hospital) {
+        where.hospital = {
+          equals: hospital as string,
+          mode: 'insensitive'
+        };
+      }
+
+      if (minFee || maxFee) {
+        where.fee = {};
+        if (minFee) where.fee.gte = parseFloat(minFee as string);
+        if (maxFee) where.fee.lte = parseFloat(maxFee as string);
+      }
+
+      // Calculate pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const skip = (pageNum - 1) * limitNum;
+
+      // Get doctors with pagination
+      const [doctors, total] = await Promise.all([
+        prisma.doctor.findMany({
+          where,
+          skip,
+          take: limitNum,
+          orderBy: [
+            { rating: 'desc' },
+            { name: 'asc' }
+          ]
+        }),
+        prisma.doctor.count({ where })
+      ]);
+
+      // Transform data for frontend compatibility
+      const transformedDoctors = doctors.map(doctor => ({
+        id: doctor.id,
+        name: doctor.name,
+        specialization: doctor.specialization,
+        hospital: doctor.hospital,
+        location: doctor.location,
+        fee: doctor.fee,
+        rating: doctor.rating,
+        availability: doctor.availableSlots,
+        image: doctor.image || '/api/placeholder/150/150',
+        experience: doctor.experience,
+        qualifications: doctor.qualifications,
+        bio: doctor.bio,
+        consultationTypes: doctor.consultationTypes,
+        workingDays: doctor.workingDays
+      }));
 
       return res.status(200).json({
-        doctors,
-        total: doctors.length,
+        doctors: transformedDoctors,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        hasMore: total > skip + limitNum
       });
     } catch (error: any) {
       console.error('Get doctors error:', error);

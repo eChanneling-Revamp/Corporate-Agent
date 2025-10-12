@@ -21,109 +21,74 @@ interface Payment {
 
 const PaymentManagement = () => {
   const dispatch = useDispatch<any>();
-  const { payments, isLoading } = useSelector((state: RootState) => state.payments);
+  const [transactions, setTransactions] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateRange, setDateRange] = useState('');
   const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
 
-  // Mock data for demonstration
-  const mockPayments: Payment[] = [
-    {
-      id: 'PAY001',
-      appointmentId: 'APT001',
-      patientName: 'John Silva',
-      doctorName: 'Dr. Sarah Johnson',
-      hospitalName: 'City General Hospital',
-      amount: 3500,
-      paymentMethod: 'Credit Card',
-      status: 'Completed',
-      transactionId: 'TXN001',
-      paymentDate: '2024-01-15',
-      commission: 350
-    },
-    {
-      id: 'PAY002',
-      appointmentId: 'APT002',
-      patientName: 'Mary Fernando',
-      doctorName: 'Dr. Michael Chen',
-      hospitalName: 'National Hospital',
-      amount: 4000,
-      paymentMethod: 'Debit Card',
-      status: 'Pending',
-      transactionId: 'TXN002',
-      paymentDate: '2024-01-16',
-      commission: 400
-    },
-    {
-      id: 'PAY003',
-      appointmentId: 'APT003',
-      patientName: 'David Perera',
-      doctorName: 'Dr. Emily Davis',
-      hospitalName: 'Children\'s Hospital',
-      amount: 2800,
-      paymentMethod: 'Bank Transfer',
-      status: 'Failed',
-      transactionId: 'TXN003',
-      paymentDate: '2024-01-14',
-      commission: 280
-    },
-    {
-      id: 'PAY004',
-      appointmentId: 'APT004',
-      patientName: 'Lisa Jayawardena',
-      doctorName: 'Dr. Robert Wilson',
-      hospitalName: 'Private Medical Center',
-      amount: 3200,
-      paymentMethod: 'Credit Card',
-      status: 'Refunded',
-      transactionId: 'TXN004',
-      paymentDate: '2024-01-13',
-      commission: 320
-    }
-  ];
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch('/api/transactions');
+        if (response.ok) {
+          const data = await response.json();
+          setTransactions(data.transactions || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        toast.error('Failed to load payment data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filteredPayments = mockPayments.filter(payment => {
+    fetchTransactions();
+  }, []);
+
+  const filteredPayments = transactions.filter((payment: any) => {
     const matchesSearch = !searchQuery || 
       payment.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.transactionId.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = !statusFilter || payment.status === statusFilter;
+    const matchesStatus = !statusFilter || payment.status.toLowerCase().includes(statusFilter.toLowerCase());
     
     return matchesSearch && matchesStatus;
   });
 
   // Calculate summary statistics
-  const totalRevenue = mockPayments
-    .filter(p => p.status === 'Completed')
-    .reduce((sum, p) => sum + p.amount, 0);
+  const totalRevenue = transactions
+    .filter((p: any) => p.status === 'PAID')
+    .reduce((sum: number, p: any) => sum + p.amount, 0);
   
-  const totalCommission = mockPayments
-    .filter(p => p.status === 'Completed')
-    .reduce((sum, p) => sum + p.commission, 0);
+  const totalCommission = transactions
+    .filter((p: any) => p.status === 'PAID')
+    .reduce((sum: number, p: any) => sum + (p.amount * 0.05), 0); // 5% commission
   
-  const pendingAmount = mockPayments
-    .filter(p => p.status === 'Pending')
-    .reduce((sum, p) => sum + p.amount, 0);
+  const pendingAmount = transactions
+    .filter((p: any) => p.status === 'PENDING')
+    .reduce((sum: number, p: any) => sum + p.amount, 0);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Completed':
+    switch (status.toUpperCase()) {
+      case 'PAID':
         return <span className="flex items-center text-green-700 bg-green-50 rounded-full px-2 py-1 text-xs font-medium">
-            <Check size={12} className="mr-1" /> {status}
+            <Check size={12} className="mr-1" /> Paid
           </span>;
-      case 'Pending':
+      case 'PENDING':
         return <span className="flex items-center text-amber-700 bg-amber-50 rounded-full px-2 py-1 text-xs font-medium">
-            <Clock size={12} className="mr-1" /> {status}
+            <Clock size={12} className="mr-1" /> Pending
           </span>;
-      case 'Failed':
+      case 'FAILED':
         return <span className="flex items-center text-red-700 bg-red-50 rounded-full px-2 py-1 text-xs font-medium">
-            <X size={12} className="mr-1" /> {status}
+            <X size={12} className="mr-1" /> Failed
           </span>;
-      case 'Refunded':
+      case 'REFUNDED':
+      case 'PARTIALLY_REFUNDED':
         return <span className="flex items-center text-gray-700 bg-gray-100 rounded-full px-2 py-1 text-xs font-medium">
-            <AlertTriangle size={12} className="mr-1" /> {status}
+            <AlertTriangle size={12} className="mr-1" /> Refunded
           </span>;
       default:
         return <span className="flex items-center text-gray-700 bg-gray-100 rounded-full px-2 py-1 text-xs font-medium">
@@ -193,7 +158,7 @@ const PaymentManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{mockPayments.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{transactions.length}</p>
               </div>
             </div>
           </div>
