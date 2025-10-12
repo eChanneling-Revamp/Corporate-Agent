@@ -118,8 +118,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, toggleMobileMenu, mobile
         <div className="relative group">
           <div className="flex items-center cursor-pointer p-1 sm:p-2 rounded-md hover:bg-gray-100">
             <div className="hidden sm:block mr-2 sm:mr-3 text-right">
-              <p className="text-sm font-medium text-gray-800 truncate max-w-20 sm:max-w-none">{user?.name || 'Agent'}</p>
-              <p className="text-xs text-gray-500 hidden md:block">Corporate Agent</p>
+              <p className="text-sm font-medium text-gray-800 truncate max-w-20 sm:max-w-none">{user?.name || 'Ojitha Rajapaksha'}</p>
+              <p className="text-xs text-gray-500 hidden md:block">Sri Lanka Telecom</p>
             </div>
             <div className="flex items-center">
               <UserCircle size={28} className="sm:w-8 sm:h-8 text-gray-500" />
@@ -129,8 +129,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, toggleMobileMenu, mobile
           
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
             <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
-              <p className="text-sm font-medium text-gray-800">{user?.name || 'Agent'}</p>
-              <p className="text-xs text-gray-500">Corporate Agent</p>
+              <p className="text-sm font-medium text-gray-800">{user?.name || 'Ojitha Rajapaksha'}</p>
+              <p className="text-xs text-gray-500">Sri Lanka Telecom</p>
             </div>
             <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               Your Profile

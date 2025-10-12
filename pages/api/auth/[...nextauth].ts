@@ -16,10 +16,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        console.log('🔐 NextAuth: Looking for agent with username:', credentials.username);
+        console.log('🔐 NextAuth: Looking for agent with username/email:', credentials.username);
         
-        const agent = await prisma.agent.findUnique({
-          where: { username: credentials.username },
+        // Check if the credential looks like an email
+        const isEmail = credentials.username.includes('@');
+        const agent = await prisma.agent.findFirst({
+          where: isEmail 
+            ? { email: credentials.username }
+            : { username: credentials.username }
         });
 
         console.log('🔐 NextAuth: Agent found:', agent ? `Yes (ID: ${agent.id})` : 'No');
@@ -89,12 +93,30 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        console.log('🎯 Session Callback: Setting session for agent ID:', token.id);
-        (session.user as any).id = token.id as string;
-        (session.user as any).username = token.username as string;
-        (session.user as any).agentType = token.agentType as string;
-        (session.user as any).status = token.status as string;
-        (session.user as any).companyName = token.companyName as string;
+        console.log('🎯 Session Callback: Fetching fresh data for agent ID:', token.id);
+        
+        // Fetch fresh agent data from database
+        const agent = await prisma.agent.findUnique({
+          where: { id: token.id as string },
+        });
+        
+        if (agent) {
+          console.log('🎯 Session Callback: Fresh data loaded for:', agent.contactPerson);
+          (session.user as any).id = agent.id;
+          (session.user as any).name = agent.contactPerson;
+          (session.user as any).email = agent.email;
+          (session.user as any).username = agent.username;
+          (session.user as any).agentType = agent.agentType;
+          (session.user as any).status = agent.status;
+          (session.user as any).companyName = agent.companyName;
+        } else {
+          console.log('🎯 Session Callback: Using token data as fallback');
+          (session.user as any).id = token.id as string;
+          (session.user as any).username = token.username as string;
+          (session.user as any).agentType = token.agentType as string;
+          (session.user as any).status = token.status as string;
+          (session.user as any).companyName = token.companyName as string;
+        }
       }
       return session;
     },

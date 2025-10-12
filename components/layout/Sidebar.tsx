@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         <Link href="/dashboard" className="flex items-center justify-center w-full">
           {!collapsed ? (
             <Image
-              src="/logo.svg"
+              src="/logo.png"
               alt="eChanneling Logo"
               width={160}
               height={48}
@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             />
           ) : (
             <Image
-              src="/logo.svg"
+              src="/logo.png"
               alt="eChanneling"
               width={40}
               height={40}

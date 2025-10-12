@@ -72,7 +72,7 @@ export default function Login() {
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials</h3>
           <div className="text-sm text-blue-700 space-y-1">
-            <p><strong>Username:</strong> demo_agent</p>
+            <p><strong>Email:</strong> admin@gmail.com</p>
             <p><strong>Password:</strong> ABcd123#</p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function Login() {
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+                Email or Username
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -89,11 +89,11 @@ export default function Login() {
                 </div>
                 <input
                   {...register('username', {
-                    required: 'Username is required',
+                    required: 'Email or username is required',
                   })}
                   type="text"
                   className={`input pl-10 ${errors.username ? 'input-error' : ''}`}
-                  placeholder="demo_agent"
+                  placeholder="admin@gmail.com"
                 />
               </div>
               {errors.username && (
