@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Agent Model
+model Agent {
+  id            String   @id @default(cuid())
+  agentType     AgentType
+  companyName   String?
+  registrationNumber String? @unique
+  
+  // Contact Information
+  contactPerson String
+  email         String   @unique
+  phone         String   @unique
+  address       String?
+  
+  // Authentication
+  username      String   @unique
+  password      String
+  
+  // Status & Permissions
+  status        AgentStatus @default(PENDING)
+  permissions   Json?
+  
+  // Branch Management
+  branches      Branch[]
+  
+  // Relationships
+  appointments  Appointment[]
+  transactions  Transaction[]
+  reports       Report[]
+  employees     CorporateEmployee[]
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+  
+  @@index([email])
+  @@index([username])
+  @@index([status])
+}
+
+enum AgentType {
+  CORPORATE
+  INDIVIDUAL
+  BANK
+  PHARMACY
+  FACTORY
+  TELCO
+}
+
+enum AgentStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+// Branch Model
+model Branch {
+  id          String   @id @default(cuid())
+  name        String
+  location    String
+  address     String
+  phone       String
+  
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId     String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([agentId])
+}
+
+// Appointment Model
+model Appointment {
+  id                String   @id @default(cuid())
+  appointmentNumber String   @unique
+  
+  // Patient Information
+  patientName       String
+  patientPhone      String
+  patientEmail      String?
+  patientNIC        String?
+  
+  // Doctor & Hospital Information
+  doctorId          String
+  doctorName        String
+  specialty         String
+  hospitalId        String
+  hospitalName      String
+  
+  // Session Details
+  sessionId         String
+  sessionDate       DateTime
+  sessionTime       String
+  appointmentType   AppointmentType @default(REGULAR)
+  
+  // Status & Payment
+  status            AppointmentStatus @default(CONFIRMED)
+  paymentStatus     PaymentStatus @default(PENDING)
+  amount            Float
+  
+  // Agent Information
+  agent             Agent    @relation(fields: [agentId], references: [id])
+  agentId           String
+  
+  // Bulk Booking Reference
+  bulkBookingId     String?
+  
+  // Cancellation & Refund
+  cancellationReason String?
+  cancelledAt       DateTime?
+  refundAmount      Float?
+  refundStatus      RefundStatus?
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([agentId])
+  @@index([appointmentNumber])
+  @@index([sessionDate])
+  @@index([status])
+  @@index([bulkBookingId])
+}
+
+enum AppointmentType {
+  REGULAR
+  TELE_CONSULTATION
+  CHAT_CONSULTATION
+  VIDEO_CONSULTATION
+  QUEUE_MANAGEMENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  REQUESTED
+  PROCESSING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+// Transaction Model
+model Transaction {
+  id              String   @id @default(cuid())
+  transactionId   String   @unique
+  
+  // Payment Details
+  amount          Float
+  currency        String   @default("LKR")
+  paymentMethod   PaymentMethod
+  paymentGateway  String?
+  
+  // Status
+  status          PaymentStatus @default(PENDING)
+  
+  // Agent & Appointments
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  agentId         String
+  appointmentIds  Json     // Array of appointment IDs
+  
+  // Payment Gateway Response
+  gatewayResponse Json?
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([agentId])
+  @@index([transactionId])
+  @@index([status])
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  CORPORATE_BILLING
+  ONLINE_BANKING
+  WALLET
+}
+
+// Corporate Employee Model
+model CorporateEmployee {
+  id              String   @id @default(cuid())
+  
+  // Employee Information
+  employeeId      String
+  name            String
+  email           String
+  phone           String
+  department      String?
+  designation     String?
+  
+  // Corporate Account
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId         String
+  
+  // Package & Limits
+  packageType     String?
+  monthlyLimit    Float?
+  usedLimit       Float    @default(0)
+  
+  // Dependents
+  dependents      Json?    // Array of dependent information
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([agentId, employeeId])
+  @@index([agentId])
+  @@index([email])
+}
+
+// Report Model
+model Report {
+  id              String   @id @default(cuid())
+  reportType      ReportType
+  reportName      String
+  
+  // Report Parameters
+  startDate       DateTime
+  endDate         DateTime
+  parameters      Json?
+  
+  // Agent
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  agentId         String
+  
+  // Report Data
+  data            Json
+  fileUrl         String?
+  
+  // Metadata
+  generatedAt     DateTime @default(now())
+  
+  @@index([agentId])
+  @@index([reportType])
+  @@index([generatedAt])
+}
+
+enum ReportType {
+  APPOINTMENT_SUMMARY
+  FINANCIAL_SUMMARY
+  EMPLOYEE_UTILIZATION
+  MONTHLY_STATEMENT
+  CUSTOM
+}
+
+// ACB (Unpaid) Appointment Model
+model ACBAppointment {
+  id                String   @id @default(cuid())
+  appointmentNumber String   @unique
+  
+  // Patient & Session Info
+  patientName       String
+  patientPhone      String
+  doctorName        String
+  sessionDate       DateTime
+  sessionTime       String
+  amount            Float
+  
+  // Payment Link
+  paymentUrl        String
+  expiresAt         DateTime
+  
+  // Status
+  isConfirmed       Boolean  @default(false)
+  confirmedAt       DateTime?
+  
+  // Agent
+  agentId           String
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([appointmentNumber])
+  @@index([agentId])
+  @@index([isConfirmed])
+}
+
+// Notification Model
+model Notification {
+  id              String   @id @default(cuid())
+  
+  // Recipient
+  agentId         String
+  
+  // Notification Details
+  type            NotificationType
+  title           String
+  message         String
+  priority        NotificationPriority @default(NORMAL)
+  
+  // Status
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  
+  // Action Link
+  actionUrl       String?
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  
+  @@index([agentId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  SESSION_UPDATED
+  DOCTOR_UNAVAILABLE
+  SYSTEM_ALERT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// Audit Log Model
+model AuditLog {
+  id              String   @id @default(cuid())
+  
+  // Agent Information
+  agentId         String
+  agentEmail      String
+  
+  // Action Details
+  action          String
+  entityType      String
+  entityId        String?
+  
+  // Request Details
+  ipAddress       String?
+  userAgent       String?
+  
+  // Changes
+  oldValue        Json?
+  newValue        Json?
+  
+  // Metadata
+  timestamp       DateTime @default(now())
+  
+  @@index([agentId])
+  @@index([timestamp])
+  @@index([action])
+}

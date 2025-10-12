@@ -3,10 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['images.unsplash.com'],
+    domains: ['images.unsplash.com', 'localhost'],
   },
   env: {
-    CUSTOM_KEY: 'my-value',
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
   },
   async redirects() {
     return [
