@@ -66,7 +66,7 @@ export default function BulkBooking() {
   const watchedPatients = watch('patients')
 
   useEffect(() => {
-    dispatch(fetchDoctors())
+    dispatch(fetchDoctors({}))
   }, [dispatch])
 
   const addPatient = () => {

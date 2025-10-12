@@ -12,7 +12,8 @@ const RecentAppointmentsTable = () => {
   const { showToast } = useToast()
 
   // Show only recent appointments (last 10)
-  const recentAppointments = appointments.slice(0, 10)
+  const appointmentsList = appointments || []
+  const recentAppointments = appointmentsList.slice(0, 10)
 
   const getStatusBadge = (status: string) => {
     switch (status) {

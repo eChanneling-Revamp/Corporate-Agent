@@ -19,7 +19,7 @@ interface Appointment {
 
 const AppointmentManagement = () => {
   const dispatch = useDispatch<any>();
-  const { appointments, loading } = useSelector((state: RootState) => state.appointments);
+  const { appointments, isLoading } = useSelector((state: RootState) => state.appointments);
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);

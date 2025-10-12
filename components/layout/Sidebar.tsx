@@ -85,19 +85,19 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         <Link href="/dashboard" className="flex items-center justify-center w-full">
           {!collapsed ? (
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="eChanneling Logo"
-              width={120}
-              height={40}
+              width={160}
+              height={48}
               className="object-contain hover:opacity-80 transition-opacity"
               priority
             />
           ) : (
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="eChanneling"
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               className="object-contain hover:opacity-80 transition-opacity"
               priority
             />

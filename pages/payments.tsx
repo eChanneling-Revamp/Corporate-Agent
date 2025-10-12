@@ -21,7 +21,7 @@ interface Payment {
 
 const PaymentManagement = () => {
   const dispatch = useDispatch<any>();
-  const { payments, loading } = useSelector((state: RootState) => state.payments);
+  const { payments, isLoading } = useSelector((state: RootState) => state.payments);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateRange, setDateRange] = useState('');

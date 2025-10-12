@@ -61,7 +61,7 @@ const initialState: AppointmentState = {
 // Async thunks
 export const fetchAppointments = createAsyncThunk(
   'appointments/fetchAppointments',
-  async (filters?: any, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/appointments', { params: filters })
       return response.data
@@ -182,7 +182,7 @@ const appointmentSlice = createSlice({
       })
       .addCase(fetchAppointments.fulfilled, (state, action) => {
         state.isLoading = false
-        state.appointments = action.payload
+        state.appointments = action.payload.appointments || []
       })
       .addCase(fetchAppointments.rejected, (state, action) => {
         state.isLoading = false
@@ -254,7 +254,7 @@ const appointmentSlice = createSlice({
     // Fetch pending ACB appointments
     builder
       .addCase(fetchPendingACBAppointments.fulfilled, (state, action) => {
-        state.pendingACBAppointments = action.payload
+        state.pendingACBAppointments = action.payload.appointments || []
       })
   },
 })

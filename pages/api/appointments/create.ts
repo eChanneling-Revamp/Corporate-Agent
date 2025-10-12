@@ -68,7 +68,7 @@ export default async function handler(
     await prisma.auditLog.create({
       data: {
         agentId: (session.user as any).id,
-        agentEmail: session.user.email!,
+        agentEmail: session.user?.email || '',
         action: 'CREATE_APPOINTMENT',
         entityType: 'APPOINTMENT',
         entityId: appointment.id,

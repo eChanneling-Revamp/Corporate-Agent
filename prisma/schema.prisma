@@ -12,16 +12,16 @@ model Agent {
   id            String   @id @default(cuid())
   agentType     AgentType
   companyName   String?
-  registrationNumber String? @unique
+  registrationNumber String?
   
   // Contact Information
   contactPerson String
-  email         String   @unique
-  phone         String   @unique
+  email         String
+  phone         String
   address       String?
   
   // Authentication
-  username      String   @unique
+  username      String
   password      String
   
   // Status & Permissions
@@ -42,8 +42,10 @@ model Agent {
   updatedAt     DateTime @updatedAt
   lastLoginAt   DateTime?
   
-  @@index([email])
-  @@index([username])
+  @@unique([email])
+  @@unique([username])
+  @@unique([registrationNumber])
+  @@unique([phone])
   @@index([status])
 }
 
@@ -83,7 +85,7 @@ model Branch {
 // Appointment Model
 model Appointment {
   id                String   @id @default(cuid())
-  appointmentNumber String   @unique
+  appointmentNumber String
   
   // Patient Information
   patientName       String
@@ -126,8 +128,8 @@ model Appointment {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
+  @@unique([appointmentNumber])
   @@index([agentId])
-  @@index([appointmentNumber])
   @@index([sessionDate])
   @@index([status])
   @@index([bulkBookingId])
@@ -168,7 +170,7 @@ enum RefundStatus {
 // Transaction Model
 model Transaction {
   id              String   @id @default(cuid())
-  transactionId   String   @unique
+  transactionId   String
   
   // Payment Details
   amount          Float
@@ -191,8 +193,8 @@ model Transaction {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
+  @@unique([transactionId])
   @@index([agentId])
-  @@index([transactionId])
   @@index([status])
 }
 
@@ -279,7 +281,7 @@ enum ReportType {
 // ACB (Unpaid) Appointment Model
 model ACBAppointment {
   id                String   @id @default(cuid())
-  appointmentNumber String   @unique
+  appointmentNumber String
   
   // Patient & Session Info
   patientName       String
@@ -304,7 +306,7 @@ model ACBAppointment {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
-  @@index([appointmentNumber])
+  @@unique([appointmentNumber])
   @@index([agentId])
   @@index([isConfirmed])
 }

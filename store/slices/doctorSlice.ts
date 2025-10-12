@@ -45,7 +45,7 @@ const initialState: DoctorState = {
 // Async thunks
 export const fetchDoctors = createAsyncThunk(
   'doctors/fetchDoctors',
-  async (filters?: any, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/doctors', { params: filters })
       return response.data
@@ -106,8 +106,8 @@ const doctorSlice = createSlice({
       })
       .addCase(fetchDoctors.fulfilled, (state, action) => {
         state.isLoading = false
-        state.doctors = action.payload
-        state.filteredDoctors = action.payload
+        state.doctors = action.payload.doctors || []
+        state.filteredDoctors = action.payload.doctors || []
       })
       .addCase(fetchDoctors.rejected, (state, action) => {
         state.isLoading = false
@@ -122,7 +122,7 @@ const doctorSlice = createSlice({
       })
       .addCase(searchDoctors.fulfilled, (state, action) => {
         state.isLoading = false
-        state.filteredDoctors = action.payload
+        state.filteredDoctors = action.payload.doctors || []
       })
       .addCase(searchDoctors.rejected, (state, action) => {
         state.isLoading = false

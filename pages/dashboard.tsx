@@ -17,20 +17,22 @@ export default function Dashboard() {
   const { user } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
-    dispatch(fetchAppointments())
+    dispatch(fetchAppointments({}))
   }, [dispatch])
 
   // Calculate statistics
-  const todayAppointments = appointments.filter(apt => {
+  const appointmentsList = appointments || []
+  
+  const todayAppointments = appointmentsList.filter(apt => {
     const today = new Date().toISOString().split('T')[0]
     return apt.date === today
   }).length
 
-  const pendingConfirmations = appointments.filter(apt => 
+  const pendingConfirmations = appointmentsList.filter(apt => 
     apt.status === 'pending'
   ).length
 
-  const thisMonthRevenue = appointments
+  const thisMonthRevenue = appointmentsList
     .filter(apt => {
       const now = new Date()
       const aptDate = new Date(apt.date)

@@ -22,7 +22,7 @@ interface Doctor {
 const DoctorSearch = () => {
   const dispatch = useDispatch<any>();
   const router = useRouter();
-  const { doctors, loading } = useSelector((state: RootState) => state.doctors);
+  const { doctors, isLoading } = useSelector((state: RootState) => state.doctors);
   const [showFilters, setShowFilters] = useState(true);
   const [query, setQuery] = useState('');
   const [specialization, setSpecialization] = useState('');
