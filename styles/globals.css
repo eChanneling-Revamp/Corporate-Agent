@@ -14,7 +14,7 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+    @apply inline-flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
   }
   
   .btn-primary {
@@ -31,6 +31,15 @@
   
   .btn-success {
     @apply btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+  }
+  
+  /* Responsive button variants */
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
+  }
+  
+  .btn-lg {
+    @apply px-6 py-3 text-base;
   }
   
   .input {
@@ -98,5 +107,41 @@
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #555;
+  }
+  
+  /* Responsive utilities */
+  .text-responsive {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+  
+  .text-responsive-lg {
+    @apply text-sm sm:text-base lg:text-lg xl:text-xl;
+  }
+  
+  .p-responsive {
+    @apply p-2 sm:p-3 lg:p-4;
+  }
+  
+  .m-responsive {
+    @apply m-2 sm:m-3 lg:m-4;
+  }
+  
+  .gap-responsive {
+    @apply gap-2 sm:gap-3 lg:gap-4;
+  }
+
+  /* Mobile-first table styles */
+  .table-responsive {
+    @apply overflow-x-auto;
+  }
+  
+  /* Hide scrollbars but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

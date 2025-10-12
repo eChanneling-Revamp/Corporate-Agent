@@ -113,30 +113,30 @@ export default function Dashboard() {
       </Head>
 
       <DashboardLayout>
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           {/* Welcome Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 sm:p-6 text-white">
-            <h1 className="text-xl sm:text-2xl font-bold">Welcome back, {session.user?.name || 'Agent'}!</h1>
-            <p className="mt-1 text-blue-100 text-sm sm:text-base">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-3 sm:p-4 lg:p-6 text-white">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Welcome back, {session.user?.name || 'Agent'}!</h1>
+            <p className="mt-1 text-blue-100 text-xs sm:text-sm lg:text-base">
               Here's what's happening with your appointments today.
             </p>
           </div>
 
           {/* Statistics Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
             {statistics.map((stat, index) => (
               <StatisticsCard key={index} {...stat} />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {/* Quick Actions Panel */}
-            <div className="xl:col-span-1">
+            <div className="lg:col-span-1 order-2 lg:order-1">
               <QuickActionsPanel />
             </div>
 
             {/* System Notifications */}
-            <div className="xl:col-span-2">
+            <div className="lg:col-span-2 order-1 lg:order-2">
               <NotificationsPanel />
             </div>
           </div>

@@ -33,7 +33,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className={`${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0 fixed lg:relative z-50 lg:z-auto transition-transform duration-300 ease-in-out ${
-        sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
+        sidebarCollapsed ? 'lg:w-16 xl:w-20' : 'lg:w-64 xl:w-72 2xl:w-64'
       }`}>
         <Sidebar collapsed={sidebarCollapsed} />
       </div>
@@ -45,8 +45,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           toggleMobileMenu={toggleMobileMenu}
           mobileMenuOpen={mobileMenuOpen}
         />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 bg-gray-50">
-          <div className="max-w-full mx-auto">
+        <main className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 lg:p-6 bg-gray-50">
+          <div className="max-w-full mx-auto min-h-full">
             {children}
           </div>
         </main>

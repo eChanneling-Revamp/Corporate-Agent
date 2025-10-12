@@ -79,9 +79,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
 
   return (
     <aside className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out ${
-      collapsed ? 'w-20' : 'w-64'
+      collapsed ? 'w-16 sm:w-20' : 'w-64 sm:w-72 lg:w-64'
     } h-full flex flex-col shadow-lg lg:shadow-none`}>
-      <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+      <div className="flex items-center justify-center h-14 sm:h-16 px-2 sm:px-4 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center justify-center w-full">
           {!collapsed ? (
             <Image
@@ -119,14 +119,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center px-4 py-3 ${
+              className={`flex items-center px-2 sm:px-4 py-2.5 sm:py-3 transition-colors ${
                 isActive(item.path)
                   ? 'text-blue-700 bg-blue-50 border-r-4 border-blue-700'
                   : 'text-gray-700 hover:bg-gray-100'
-              } ${collapsed ? 'justify-center' : 'space-x-3'}`}
+              } ${collapsed ? 'justify-center' : 'space-x-2 sm:space-x-3'}`}
             >
-              <span>{item.icon}</span>
-              {!collapsed && <span>{item.name}</span>}
+              <span className="flex-shrink-0">{item.icon}</span>
+              {!collapsed && <span className="text-sm sm:text-base font-medium truncate">{item.name}</span>}
             </Link>
           ))}
         </nav>

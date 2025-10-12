@@ -54,30 +54,30 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-6 sm:py-12 px-3 sm:px-4 lg:px-8">
+      <div className="max-w-sm sm:max-w-md w-full space-y-6 sm:space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <LogIn className="h-6 w-6 text-blue-600" />
+          <div className="mx-auto h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-blue-100">
+            <LogIn className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-1 sm:mt-2 text-center text-xs sm:text-sm text-gray-600">
             eChanneling Corporate Agent Portal
           </p>
         </div>
         
         {/* Demo Credentials Info */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials</h3>
-          <div className="text-sm text-blue-700 space-y-1">
+        <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-xs sm:text-sm font-medium text-blue-800 mb-2">Demo Credentials</h3>
+          <div className="text-xs sm:text-sm text-blue-700 space-y-1">
             <p><strong>Email:</strong> admin@gmail.com</p>
             <p><strong>Password:</strong> ABcd123#</p>
           </div>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">

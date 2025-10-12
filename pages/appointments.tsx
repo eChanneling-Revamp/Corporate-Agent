@@ -198,7 +198,7 @@ const AppointmentManagement = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         <div className="mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
