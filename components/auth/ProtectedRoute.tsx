@@ -1,7 +1,6 @@
 import { useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/router'
-import { useSelector } from 'react-redux'
-import { RootState } from '../../store/store'
+import { useSession } from 'next-auth/react'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -15,29 +14,34 @@ export const ProtectedRoute = ({
   redirectTo = '/auth/login' 
 }: ProtectedRouteProps) => {
   const router = useRouter()
-  const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth)
+  const { data: session, status } = useSession()
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
+    if (status !== 'loading') {
+      if (!session) {
         router.push(redirectTo)
         return
       }
 
-      if (requiredRole && user?.role !== requiredRole) {
-        router.push('/unauthorized')
-        return
+      // Check agent type if required role is specified
+      if (requiredRole && requiredRole === 'agent') {
+        const userAgentType = (session.user as any)?.agentType
+        if (!userAgentType || !['CORPORATE', 'INDIVIDUAL', 'BANK', 'PHARMACY', 'FACTORY', 'TELCO'].includes(userAgentType)) {
+          router.push('/unauthorized')
+          return
+        }
       }
 
-      // Check if user is verified and approved
-      if (user && (!user.isVerified || user.registrationStatus !== 'approved')) {
+      // Check if agent is active
+      const userStatus = (session.user as any)?.status
+      if (userStatus && userStatus !== 'ACTIVE') {
         router.push('/account/pending')
         return
       }
     }
-  }, [isAuthenticated, user, isLoading, router, requiredRole, redirectTo])
+  }, [session, status, router, requiredRole, redirectTo])
 
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -48,15 +52,16 @@ export const ProtectedRoute = ({
     )
   }
 
-  if (!isAuthenticated) {
+  if (!session) {
     return null
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole && requiredRole === 'agent' && !(session.user as any)?.agentType) {
     return null
   }
 
-  if (user && (!user.isVerified || user.registrationStatus !== 'approved')) {
+  const userStatus = (session.user as any)?.status
+  if (userStatus && userStatus !== 'ACTIVE') {
     return null
   }
 

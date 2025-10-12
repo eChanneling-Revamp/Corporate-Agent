@@ -1,9 +1,6 @@
-import { createContext, useContext, useEffect, ReactNode } from 'react'
+import { createContext, useContext, ReactNode } from 'react'
 import { useRouter } from 'next/router'
-import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '../store/store'
-import { refreshTokenThunk } from '../store/slices/authSlice'
-import Cookies from 'js-cookie'
+import { useSession, signOut } from 'next-auth/react'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -28,31 +25,17 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const router = useRouter()
-  const dispatch = useDispatch<any>()
-  const { user, isAuthenticated, isLoading, token } = useSelector((state: RootState) => state.auth)
+  const { data: session, status } = useSession()
 
-  useEffect(() => {
-    // Check if we have a token in cookies on app startup
-    const cookieToken = Cookies.get('authToken')
-    const refreshToken = Cookies.get('refreshToken')
-    
-    if (cookieToken && !token && refreshToken) {
-      // Try to refresh the token
-      dispatch(refreshTokenThunk())
-    }
-  }, [dispatch, token])
-
-  const logout = () => {
-    Cookies.remove('authToken')
-    Cookies.remove('refreshToken')
-    dispatch({ type: 'auth/logout' })
+  const logout = async () => {
+    await signOut({ redirect: false })
     router.push('/auth/login')
   }
 
   const value: AuthContextType = {
-    isAuthenticated,
-    user,
-    isLoading,
+    isAuthenticated: !!session,
+    user: session?.user,
+    isLoading: status === 'loading',
     logout,
   }
 

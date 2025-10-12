@@ -1,7 +1,5 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 
@@ -18,9 +16,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
+        console.log('🔐 NextAuth: Looking for agent with username:', credentials.username);
+        
         const agent = await prisma.agent.findUnique({
           where: { username: credentials.username },
         });
+
+        console.log('🔐 NextAuth: Agent found:', agent ? `Yes (ID: ${agent.id})` : 'No');
 
         if (!agent) {
           throw new Error('No agent found with this username');
@@ -30,10 +32,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Account is not active. Please contact support.');
         }
 
+        console.log('🔐 NextAuth: Validating password...');
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           agent.password
         );
+
+        console.log('🔐 NextAuth: Password valid:', isPasswordValid);
 
         if (!isPasswordValid) {
           throw new Error('Invalid password');
@@ -56,6 +61,8 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
+        console.log('🔐 NextAuth: Returning agent object with ID:', agent.id);
+
         return {
           id: agent.id,
           email: agent.email,
@@ -71,6 +78,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log('🎫 JWT Callback: Setting token for user ID:', user.id);
         token.id = user.id;
         token.username = (user as any).username;
         token.agentType = (user as any).agentType;
@@ -81,6 +89,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.id) {
+        console.log('🎯 Session Callback: Setting session for agent ID:', token.id);
         (session.user as any).id = token.id as string;
         (session.user as any).username = token.username as string;
         (session.user as any).agentType = token.agentType as string;
