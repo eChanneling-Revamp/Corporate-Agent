@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Search, Filter, Calendar, MapPin, DollarSign, Star, ChevronDown, X } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
