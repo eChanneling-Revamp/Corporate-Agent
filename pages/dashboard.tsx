@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Head from 'next/head'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
@@ -7,7 +7,9 @@ import StatisticsCard from '../components/dashboard/StatisticsCard'
 import QuickActionsPanel from '../components/dashboard/QuickActionsPanel'
 import RecentAppointmentsTable from '../components/dashboard/RecentAppointmentsTable'
 import NotificationsPanel from '../components/dashboard/NotificationsPanel'
-import { CalendarCheck, AlertCircle, DollarSign, Users } from 'lucide-react'
+import AnalyticsChart from '../components/dashboard/AnalyticsChart'
+import PerformanceMetrics from '../components/dashboard/PerformanceMetrics'
+import { CalendarCheck, AlertCircle, DollarSign, Users, TrendingUp, Activity } from 'lucide-react'
 import { fetchAppointments } from '../store/slices/appointmentSlice'
 import { RootState } from '../store/store'
 
@@ -15,9 +17,16 @@ export default function Dashboard() {
   const dispatch = useDispatch<any>()
   const { appointments } = useSelector((state: RootState) => state.appointments)
   const { user } = useSelector((state: RootState) => state.auth)
+  const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState('week')
 
   useEffect(() => {
-    dispatch(fetchAppointments())
+    const loadData = async () => {
+      setLoading(true)
+      await dispatch(fetchAppointments({}))
+      setLoading(false)
+    }
+    loadData()
   }, [dispatch])
 
   // Calculate statistics
@@ -42,6 +51,17 @@ export default function Dashboard() {
 
   const activeSessions = 1 // This would come from session management
 
+  // Mock analytics data for charts
+  const analyticsData = [
+    { name: 'Mon', appointments: 12, revenue: 42000 },
+    { name: 'Tue', appointments: 19, revenue: 66500 },
+    { name: 'Wed', appointments: 15, revenue: 52500 },
+    { name: 'Thu', appointments: 22, revenue: 77000 },
+    { name: 'Fri', appointments: 18, revenue: 63000 },
+    { name: 'Sat', appointments: 25, revenue: 87500 },
+    { name: 'Sun', appointments: 10, revenue: 35000 }
+  ]
+
   const statistics = [
     {
       title: "Today's Appointments",
@@ -49,15 +69,21 @@ export default function Dashboard() {
       change: '+12%',
       isPositive: true,
       icon: <CalendarCheck size={20} className="text-blue-500" />,
-      bgColor: 'bg-blue-50'
+      bgColor: 'bg-blue-50',
+      trend: 'up' as const,
+      loading: loading,
+      subtitle: 'Scheduled for today'
     },
     {
       title: 'Pending Confirmations',
       value: pendingConfirmations.toString(),
       change: '-3%',
-      isPositive: false,
+      isPositive: true,
       icon: <AlertCircle size={20} className="text-amber-500" />,
-      bgColor: 'bg-amber-50'
+      bgColor: 'bg-amber-50',
+      trend: 'down' as const,
+      loading: loading,
+      subtitle: 'Awaiting confirmation'
     },
     {
       title: 'Total Revenue (This Month)',
@@ -65,7 +91,10 @@ export default function Dashboard() {
       change: '+18%',
       isPositive: true,
       icon: <DollarSign size={20} className="text-green-500" />,
-      bgColor: 'bg-green-50'
+      bgColor: 'bg-green-50',
+      trend: 'up' as const,
+      loading: loading,
+      subtitle: 'Monthly earnings'
     },
     {
       title: 'Active Sessions',
@@ -73,7 +102,10 @@ export default function Dashboard() {
       change: '0%',
       isPositive: true,
       icon: <Users size={20} className="text-purple-500" />,
-      bgColor: 'bg-purple-50'
+      bgColor: 'bg-purple-50',
+      trend: 'neutral' as const,
+      loading: loading,
+      subtitle: 'Current active users'
     }
   ]
 
@@ -101,6 +133,15 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* Analytics Chart */}
+          <div className="w-full">
+            <AnalyticsChart 
+              data={analyticsData}
+              title="Weekly Performance Overview"
+              subtitle="Appointments and revenue trends for the current week"
+            />
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
             {/* Quick Actions Panel */}
             <div className="xl:col-span-1">
@@ -111,6 +152,11 @@ export default function Dashboard() {
             <div className="xl:col-span-2">
               <NotificationsPanel />
             </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="w-full">
+            <PerformanceMetrics />
           </div>
 
           {/* Recent Appointments Table */}
