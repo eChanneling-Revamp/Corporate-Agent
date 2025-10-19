@@ -46,11 +46,12 @@ export default function ACBConfirmation() {
   }
 
   const filteredAppointments = pendingACBAppointments.filter(appointment => {
-    const matchesSearch = appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.id.toLowerCase().includes(searchTerm.toLowerCase())
+    const aptData = appointment as any
+    const matchesSearch = (aptData.patientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (aptData.doctorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (aptData.id || '').toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesDate = !filterDate || appointment.date === filterDate
+    const matchesDate = !filterDate || (aptData.date || aptData.appointmentDate) === filterDate
     
     return matchesSearch && matchesDate
   })
@@ -144,8 +145,10 @@ export default function ACBConfirmation() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredAppointments.map((appointment) => (
-                <div key={appointment.id} className="card hover:shadow-md transition-shadow">
+              {filteredAppointments.map((appointment) => {
+                const aptData = appointment as any
+                return (
+                <div key={aptData.id} className="card hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left Column - Patient & Appointment Info */}
@@ -156,17 +159,17 @@ export default function ACBConfirmation() {
                             <span className="font-medium text-gray-900">Patient Information</span>
                           </div>
                           <div className="pl-6 space-y-1">
-                            <p className="font-semibold text-lg">{appointment.patientName}</p>
-                            {appointment.patientEmail && (
+                            <p className="font-semibold text-lg">{aptData.patientName || 'N/A'}</p>
+                            {aptData.patientEmail && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Mail className="h-3 w-3 mr-1" />
-                                {appointment.patientEmail}
+                                {aptData.patientEmail}
                               </div>
                             )}
-                            {appointment.patientPhone && (
+                            {aptData.patientPhone && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Phone className="h-3 w-3 mr-1" />
-                                {appointment.patientPhone}
+                                {aptData.patientPhone}
                               </div>
                             )}
                           </div>
@@ -179,13 +182,13 @@ export default function ACBConfirmation() {
                           </div>
                           <div className="pl-6 space-y-1">
                             <p className="text-sm">
-                              <span className="font-medium">ID:</span> {appointment.id}
+                              <span className="font-medium">ID:</span> {aptData.id || aptData.appointmentNumber || 'N/A'}
                             </p>
                             <p className="text-sm">
-                              <span className="font-medium">Date:</span> {appointment.date}
+                              <span className="font-medium">Date:</span> {aptData.date || aptData.appointmentDate || 'N/A'}
                             </p>
                             <p className="text-sm">
-                              <span className="font-medium">Time:</span> {appointment.time}
+                              <span className="font-medium">Time:</span> {aptData.time || aptData.appointmentTime || 'N/A'}
                             </p>
                             <div className="flex items-center">
                               <span className="badge badge-warning">ACB Pending</span>
@@ -202,11 +205,11 @@ export default function ACBConfirmation() {
                             <span className="font-medium text-gray-900">Doctor Information</span>
                           </div>
                           <div className="pl-6 space-y-1">
-                            <p className="font-semibold text-lg">{appointment.doctorName}</p>
-                            <p className="text-sm text-gray-600">{appointment.specialization}</p>
+                            <p className="font-semibold text-lg">{aptData.doctorName || 'N/A'}</p>
+                            <p className="text-sm text-gray-600">{aptData.specialization || 'General'}</p>
                             <div className="flex items-center text-sm text-gray-600">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {appointment.hospital}
+                              {aptData.hospital || aptData.hospitalName || 'N/A'}
                             </div>
                           </div>
                         </div>
@@ -218,7 +221,7 @@ export default function ACBConfirmation() {
                           </div>
                           <div className="pl-6 space-y-1">
                             <p className="text-lg font-semibold text-green-600">
-                              Rs {appointment.amount.toLocaleString()}
+                              Rs {(aptData.amount || aptData.totalAmount || 0).toLocaleString()}
                             </p>
                             <div className="flex items-center">
                               <span className="badge badge-warning">Payment Pending</span>
@@ -231,11 +234,11 @@ export default function ACBConfirmation() {
                     {/* Action Button */}
                     <div className="ml-6">
                       <button
-                        onClick={() => handleConfirmACB(appointment.id)}
-                        disabled={confirmingId === appointment.id}
+                        onClick={() => handleConfirmACB(aptData.id)}
+                        disabled={confirmingId === aptData.id}
                         className="btn-success"
                       >
-                        {confirmingId === appointment.id ? (
+                        {confirmingId === aptData.id ? (
                           <div className="loading-spinner mr-2" />
                         ) : (
                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -246,15 +249,16 @@ export default function ACBConfirmation() {
                   </div>
 
                   {/* Additional Notes */}
-                  {appointment.notes && (
+                  {aptData.notes && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Notes:</span> {appointment.notes}
+                        <span className="font-medium">Notes:</span> {aptData.notes}
                       </p>
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
@@ -271,7 +275,10 @@ export default function ACBConfirmation() {
                 <div className="text-right">
                   <p className="text-sm text-blue-700">Total Pending Amount</p>
                   <p className="text-xl font-bold text-blue-900">
-                    Rs {filteredAppointments.reduce((sum, apt) => sum + apt.amount, 0).toLocaleString()}
+                    Rs {filteredAppointments.reduce((sum, apt) => {
+                      const amount = (apt as any).amount || (apt as any).totalAmount || 0
+                      return sum + amount
+                    }, 0).toLocaleString()}
                   </p>
                 </div>
               </div>

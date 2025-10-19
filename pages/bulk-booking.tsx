@@ -35,8 +35,12 @@ interface BulkBookingFormData {
 
 export default function BulkBooking() {
   const dispatch = useDispatch<any>()
-  const { doctors, isLoading: doctorsLoading } = useSelector((state: RootState) => state.doctors)
+  const { doctors: doctorsData, isLoading: doctorsLoading } = useSelector((state: RootState) => state.doctors)
   const { isLoading: appointmentsLoading } = useSelector((state: RootState) => state.appointments)
+  
+  // Ensure doctors is always an array
+  const doctors = Array.isArray(doctorsData) ? doctorsData : []
+  
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null)
   const [availableTimeSlots] = useState([
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -66,7 +70,7 @@ export default function BulkBooking() {
   const watchedPatients = watch('patients')
 
   useEffect(() => {
-    dispatch(fetchDoctors())
+    dispatch(fetchDoctors({}))
   }, [dispatch])
 
   const addPatient = () => {
