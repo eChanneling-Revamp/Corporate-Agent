@@ -59,7 +59,7 @@ class NotificationService {
         }
       }
 
-      this.emailTransporter = nodemailer.createTransport(emailConfig)
+      this.emailTransporter = nodemailer.createTransporter(emailConfig)
     } catch (error) {
       console.error('Failed to initialize email transporter:', error)
     }
