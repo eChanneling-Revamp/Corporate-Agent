@@ -9,22 +9,16 @@ import ErrorBoundary from '../components/common/ErrorBoundary'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import { connectSocket } from '../lib/socketClient'
 import { setupGlobalErrorHandlers } from '../lib/errorHandler'
-import { usePWA } from '../hooks/usePWA'
 import PWAInstallPrompt from '../components/common/PWAInstallPrompt'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }: { Component: any, pageProps: any }) {
-  const { requestNotificationPermission } = usePWA()
-
   useEffect(() => {
     // Setup global error handlers
     setupGlobalErrorHandlers()
 
-    // Connect to socket server
+    // Connect to socket server (optional - won't show errors if unavailable)
     const socket = connectSocket()
-
-    // Request notification permission
-    requestNotificationPermission()
 
     // Cleanup on unmount
     return () => {

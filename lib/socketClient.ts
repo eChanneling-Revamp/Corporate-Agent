@@ -96,10 +96,10 @@ class SocketClient {
         token
       },
       reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 3, // Reduce from 5 to 3 attempts
+      reconnectionDelay: 2000,
       reconnectionDelayMax: 5000,
-      timeout: 20000,
+      timeout: 10000, // Reduce timeout from 20s to 10s
     })
 
     this.setupDefaultEventHandlers()
@@ -138,10 +138,12 @@ class SocketClient {
     })
 
     this.socket.on(SocketEvents.CONNECT_ERROR, (error) => {
-      console.error('Socket connection error:', error)
+      console.log('Socket connection error:', error.message || error)
       
+      // Only show error after multiple failed attempts
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        showToast.error('Connection failed. Please refresh the page.')
+        console.warn('Socket server unavailable. Real-time features disabled.')
+        // Don't show toast - socket server is optional
       }
     })
 

@@ -4,12 +4,11 @@ import Link from 'next/link'
 import { Eye, XCircle, Send, Check, Clock, AlertTriangle } from 'lucide-react'
 import { RootState } from '../../store/store'
 import { cancelAppointment } from '../../store/slices/appointmentSlice'
-import { useToast } from '../../store/Toast'
+import { showToast } from '../../components/common/ToastProvider'
 
 const RecentAppointmentsTable = () => {
   const dispatch = useDispatch<any>()
   const { appointments } = useSelector((state: RootState) => state.appointments)
-  const { showToast } = useToast()
 
   // Show only recent appointments (last 10)
   const recentAppointments = appointments.slice(0, 10)
@@ -90,23 +89,15 @@ const RecentAppointmentsTable = () => {
     link.download = 'recent_appointments.csv'
     link.click()
     URL.revokeObjectURL(url)
-    showToast({ type: 'success', title: 'Exported', message: 'Recent appointments exported to CSV.' })
+    showToast.success('Recent appointments exported to CSV.')
   }
 
   const handleCancelAppointment = async (appointmentId: string) => {
     try {
       await dispatch(cancelAppointment(appointmentId)).unwrap()
-      showToast({ 
-        type: 'success', 
-        title: 'Appointment cancelled', 
-        message: `${appointmentId} has been cancelled.` 
-      })
+      showToast.success(`${appointmentId} has been cancelled.`)
     } catch (error) {
-      showToast({ 
-        type: 'error', 
-        title: 'Error', 
-        message: 'Failed to cancel appointment.' 
-      })
+      showToast.error('Failed to cancel appointment.')
     }
   }
 

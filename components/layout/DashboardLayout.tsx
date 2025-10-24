@@ -1,7 +1,6 @@
 import { useState, ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
-import { ToastContainer } from '../../store/Toast'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -51,8 +50,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </main>
       </div>
-      
-      <ToastContainer />
     </div>
   )
 }
