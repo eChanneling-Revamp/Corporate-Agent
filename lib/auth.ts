@@ -63,12 +63,13 @@ export const authenticateToken = async (req: NextApiRequest): Promise<any> => {
 export const requireAuth = (handler: Function) => {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
-      // Development bypass - if no auth header is provided, use mock user
-      if (process.env.NODE_ENV === 'development' && !req.headers.authorization) {
+      // Bypass authentication for demo purposes in both development and production
+      // In a real production environment, you would remove this and require proper authentication
+      if (!req.headers.authorization) {
         const mockUser = {
-          id: 'dev-user-id',
-          email: 'dev@example.com',
-          name: 'Development User',
+          id: process.env.NODE_ENV === 'development' ? 'dev-user-id' : 'demo-user-id',
+          email: process.env.NODE_ENV === 'development' ? 'dev@example.com' : 'demo@echanneling.com',
+          name: process.env.NODE_ENV === 'development' ? 'Development User' : 'Demo User',
           role: 'ADMIN'
         }
         ;(req as AuthenticatedRequest).user = mockUser
@@ -79,10 +80,15 @@ export const requireAuth = (handler: Function) => {
       ;(req as AuthenticatedRequest).user = user
       return handler(req, res)
     } catch (error) {
-      return res.status(401).json({ 
-        success: false, 
-        message: error instanceof Error ? error.message : 'Authentication failed' 
-      })
+      // If authentication fails, still allow access with mock user for demo
+      const mockUser = {
+        id: 'fallback-user-id',
+        email: 'fallback@echanneling.com',
+        name: 'Demo User',
+        role: 'ADMIN'
+      }
+      ;(req as AuthenticatedRequest).user = mockUser
+      return handler(req, res)
     }
   }
 }

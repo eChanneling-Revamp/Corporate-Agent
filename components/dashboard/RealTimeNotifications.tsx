@@ -67,7 +67,7 @@ interface RealTimeNotificationsProps {
 const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
   userId,
   userRole,
-  wsUrl = 'ws://localhost:3001',
+  wsUrl = 'ws://localhost:3000',
   onNotificationAction
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([])
