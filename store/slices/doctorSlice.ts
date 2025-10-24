@@ -106,8 +106,19 @@ const doctorSlice = createSlice({
       })
       .addCase(fetchDoctors.fulfilled, (state, action) => {
         state.isLoading = false
-        state.doctors = action.payload
-        state.filteredDoctors = action.payload
+        // Extract doctors array from API response
+        const rawDoctors = action.payload?.data?.doctors || action.payload?.doctors || action.payload || []
+        
+        // Transform the data to match component expectations
+        const transformedDoctors = Array.isArray(rawDoctors) ? rawDoctors.map((doctor: any) => ({
+          ...doctor,
+          hospital: doctor.hospital?.name || doctor.hospital || 'Unknown Hospital',
+          fee: doctor.consultationFee ? `Rs. ${doctor.consultationFee}` : 'Contact for fee',
+          image: doctor.profileImage || '/default-doctor.png'
+        })) : []
+        
+        state.doctors = transformedDoctors
+        state.filteredDoctors = transformedDoctors
       })
       .addCase(fetchDoctors.rejected, (state, action) => {
         state.isLoading = false
@@ -122,7 +133,18 @@ const doctorSlice = createSlice({
       })
       .addCase(searchDoctors.fulfilled, (state, action) => {
         state.isLoading = false
-        state.filteredDoctors = action.payload
+        // Extract doctors array from API response
+        const rawDoctors = action.payload?.data?.doctors || action.payload?.doctors || action.payload || []
+        
+        // Transform the data to match component expectations
+        const transformedDoctors = Array.isArray(rawDoctors) ? rawDoctors.map((doctor: any) => ({
+          ...doctor,
+          hospital: doctor.hospital?.name || doctor.hospital || 'Unknown Hospital',
+          fee: doctor.consultationFee ? `Rs. ${doctor.consultationFee}` : 'Contact for fee',
+          image: doctor.profileImage || '/default-doctor.png'
+        })) : []
+        
+        state.filteredDoctors = transformedDoctors
       })
       .addCase(searchDoctors.rejected, (state, action) => {
         state.isLoading = false

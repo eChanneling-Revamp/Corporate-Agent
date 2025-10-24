@@ -14,7 +14,11 @@ import {
   LogOut, 
   User,
   Users,
-  CheckCircle
+  CheckCircle,
+  Heart,
+  MessageSquare,
+  FileText,
+  UserCheck
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -35,6 +39,31 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       name: 'Doctor Search',
       path: '/doctor-search',
       icon: <Search size={20} />
+    },
+    {
+      name: 'Customers',
+      path: '/customers',
+      icon: <Heart size={20} />
+    },
+    {
+      name: 'Support Tickets',
+      path: '/support-tickets',
+      icon: <MessageSquare size={20} />
+    },
+    {
+      name: 'Patient History',
+      path: '/patient-history',
+      icon: <FileText size={20} />
+    },
+    {
+      name: 'Follow-up Scheduling',
+      path: '/follow-up-scheduling',
+      icon: <Calendar size={20} />
+    },
+    {
+      name: 'Approval Workflows',
+      path: '/approval-workflows',
+      icon: <UserCheck size={20} />
     },
     {
       name: 'Appointments',

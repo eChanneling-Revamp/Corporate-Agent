@@ -1,10 +1,8 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ]
+  "env": {
+    "NEXT_PUBLIC_API_BASE_URL": "/api",
+    "NEXT_PUBLIC_APP_URL": "https://corporate-agent-frontend.vercel.app"
+  }
 }

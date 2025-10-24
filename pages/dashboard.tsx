@@ -23,31 +23,45 @@ export default function Dashboard() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
-      await dispatch(fetchAppointments({}))
+      try {
+        console.log('Fetching appointments...')
+        const result = await dispatch(fetchAppointments({}))
+        console.log('Fetch result:', result)
+      } catch (error) {
+        console.error('Error fetching appointments:', error)
+      }
       setLoading(false)
     }
     loadData()
   }, [dispatch])
 
-  // Calculate statistics
-  const todayAppointments = appointments.filter(apt => {
+  // Debug logging
+  useEffect(() => {
+    console.log('Appointments from Redux:', appointments)
+    console.log('Is appointments an array?', Array.isArray(appointments))
+  }, [appointments])
+
+  // Calculate statistics with defensive programming
+  const appointmentsArray = Array.isArray(appointments) ? appointments : []
+  
+  const todayAppointments = appointmentsArray.filter(apt => {
     const today = new Date().toISOString().split('T')[0]
-    return apt.date === today
+    return apt.date === today || apt.appointmentDate === today
   }).length
 
-  const pendingConfirmations = appointments.filter(apt => 
-    apt.status === 'pending'
+  const pendingConfirmations = appointmentsArray.filter(apt => 
+    apt.status === 'pending' || apt.status === 'PENDING'
   ).length
 
-  const thisMonthRevenue = appointments
+  const thisMonthRevenue = appointmentsArray
     .filter(apt => {
       const now = new Date()
-      const aptDate = new Date(apt.date)
+      const aptDate = new Date(apt.date || apt.appointmentDate)
       return aptDate.getMonth() === now.getMonth() && 
              aptDate.getFullYear() === now.getFullYear() &&
-             apt.paymentStatus === 'paid'
+             (apt.paymentStatus === 'paid' || apt.paymentStatus === 'COMPLETED')
     })
-    .reduce((sum, apt) => sum + apt.amount, 0)
+    .reduce((sum, apt) => sum + (apt.amount || apt.totalAmount || apt.consultationFee || 0), 0)
 
   const activeSessions = 1 // This would come from session management
 

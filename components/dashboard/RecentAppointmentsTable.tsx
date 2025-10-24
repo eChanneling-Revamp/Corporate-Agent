@@ -15,7 +15,8 @@ const RecentAppointmentsTable = () => {
   const recentAppointments = appointments.slice(0, 10)
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const statusLower = status.toLowerCase()
+    switch (statusLower) {
       case 'confirmed':
         return (
           <span className="flex items-center text-green-700 bg-green-50 rounded-full px-2 py-1 text-xs font-medium">
@@ -26,6 +27,12 @@ const RecentAppointmentsTable = () => {
         return (
           <span className="flex items-center text-amber-700 bg-amber-50 rounded-full px-2 py-1 text-xs font-medium">
             <Clock size={12} className="mr-1" /> Pending
+          </span>
+        )
+      case 'completed':
+        return (
+          <span className="flex items-center text-blue-700 bg-blue-50 rounded-full px-2 py-1 text-xs font-medium">
+            <Check size={12} className="mr-1" /> Completed
           </span>
         )
       case 'payment_pending':
@@ -52,17 +59,27 @@ const RecentAppointmentsTable = () => {
   const exportCSV = () => {
     if (!recentAppointments.length) return
     const header = ['Appointment ID', 'Patient', 'Doctor', 'Specialization', 'Date', 'Time', 'Hospital', 'Status', 'Amount']
-    const rows = recentAppointments.map(a => [
-      a.id,
-      a.patientName,
-      a.doctorName,
-      a.specialization,
-      a.date,
-      a.time,
-      a.hospital,
-      a.status,
-      `Rs ${a.amount}`
-    ])
+    const rows = recentAppointments.map(a => {
+      const aptData = a as any
+      const amount = aptData.amount || aptData.totalAmount || aptData.consultationFee || 0
+      const doctorName = aptData.doctorName || aptData.doctor?.name || 'Unknown Doctor'
+      const specialization = aptData.specialization || aptData.doctor?.specialization || 'Unknown'
+      const hospitalName = typeof aptData.hospital === 'string' ? aptData.hospital : aptData.hospital?.name || 'Unknown Hospital'
+      const date = aptData.date || aptData.appointmentDate || 'Unknown Date'
+      const time = aptData.time || aptData.appointmentTime || 'Unknown Time'
+      
+      return [
+        a.id,
+        a.patientName,
+        doctorName,
+        specialization,
+        date,
+        time,
+        hospitalName,
+        a.status,
+        `Rs ${Number(amount).toLocaleString()}`
+      ]
+    })
     const csv = [header, ...rows]
       .map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(','))
       .join('\n')
@@ -153,56 +170,68 @@ const RecentAppointmentsTable = () => {
                 </td>
               </tr>
             )}
-            {recentAppointments.map(appointment => (
-              <tr key={appointment.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
-                  {appointment.id}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                  {appointment.patientName}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-800">
-                  <div>{appointment.doctorName}</div>
-                  <div className="text-xs text-gray-500">
-                    {appointment.specialization}
-                  </div>
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                  <div>{appointment.date}</div>
-                  <div className="text-xs text-gray-500">
-                    {appointment.time}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-800">
-                  {appointment.hospital}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {getStatusBadge(appointment.status)}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
-                  Rs {appointment.amount.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
-                  <div className="flex justify-center space-x-2">
-                    <button className="text-blue-600 hover:text-blue-800" title="View">
-                      <Eye size={18} />
-                    </button>
-                    {appointment.status !== 'cancelled' && (
-                      <button 
-                        onClick={() => handleCancelAppointment(appointment.id)} 
-                        className="text-red-600 hover:text-red-800" 
-                        title="Cancel"
-                      >
-                        <XCircle size={18} />
+            {recentAppointments.map(appointment => {
+              // Handle different field name variations with type assertion for flexibility
+              const aptData = appointment as any
+              const amount = aptData.amount || aptData.totalAmount || aptData.consultationFee || 0
+              const doctorName = aptData.doctorName || aptData.doctor?.name || 'Unknown Doctor'
+              const specialization = aptData.specialization || aptData.doctor?.specialization || 'Unknown'
+              const hospitalName = typeof aptData.hospital === 'string' ? aptData.hospital : aptData.hospital?.name || 'Unknown Hospital'
+              const date = aptData.date || aptData.appointmentDate || 'Unknown Date'
+              const time = aptData.time || aptData.appointmentTime || 'Unknown Time'
+              const status = aptData.status?.toLowerCase() || 'unknown'
+              
+              return (
+                <tr key={appointment.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
+                    {appointment.id}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                    {appointment.patientName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-800">
+                    <div>{doctorName}</div>
+                    <div className="text-xs text-gray-500">
+                      {specialization}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                    <div>{date}</div>
+                    <div className="text-xs text-gray-500">
+                      {time}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-800">
+                    {hospitalName}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {getStatusBadge(status)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
+                    Rs {Number(amount).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button className="text-blue-600 hover:text-blue-800" title="View">
+                        <Eye size={18} />
                       </button>
-                    )}
-                    <button className="text-green-600 hover:text-green-800" title="Resend">
-                      <Send size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      {status !== 'cancelled' && (
+                        <button 
+                          onClick={() => handleCancelAppointment(appointment.id)} 
+                          className="text-red-600 hover:text-red-800" 
+                          title="Cancel"
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      )}
+                      <button className="text-green-600 hover:text-green-800" title="Resend">
+                        <Send size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

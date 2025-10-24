@@ -64,6 +64,10 @@ export const fetchAppointments = createAsyncThunk(
   async (filters?: any, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/appointments', { params: filters })
+      // Return the actual data from the API response
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data.appointments || response.data.data
+      }
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch appointments')
@@ -139,6 +143,10 @@ export const fetchPendingACBAppointments = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/appointments/pending-acb')
+      // Return the actual data from the API response
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data
+      }
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch pending ACB appointments')
@@ -182,7 +190,8 @@ const appointmentSlice = createSlice({
       })
       .addCase(fetchAppointments.fulfilled, (state, action) => {
         state.isLoading = false
-        state.appointments = action.payload
+        // Ensure we always have an array
+        state.appointments = Array.isArray(action.payload) ? action.payload : []
       })
       .addCase(fetchAppointments.rejected, (state, action) => {
         state.isLoading = false
@@ -254,7 +263,9 @@ const appointmentSlice = createSlice({
     // Fetch pending ACB appointments
     builder
       .addCase(fetchPendingACBAppointments.fulfilled, (state, action) => {
-        state.pendingACBAppointments = action.payload
+        // Extract data from API response
+        const pendingACB = action.payload?.data || action.payload || []
+        state.pendingACBAppointments = Array.isArray(pendingACB) ? pendingACB : []
       })
   },
 })
