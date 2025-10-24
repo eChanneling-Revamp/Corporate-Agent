@@ -1,4 +1,4 @@
-import apiClient from './authService'
+import { ApiService, RequestBuilder, CacheManager } from '../lib/api/apiClient'
 
 export interface Doctor {
   id: string
@@ -33,62 +33,82 @@ export interface DoctorSearchFilters {
 export const doctorAPI = {
   // Get all doctors with optional filters
   getDoctors: async (filters: DoctorSearchFilters = {}) => {
-    const params = new URLSearchParams()
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString())
-      }
-    })
+    // Check cache first
+    const cacheKey = `doctors-${JSON.stringify(filters)}`
+    const cached = CacheManager.get(cacheKey)
+    if (cached) return cached
 
-    const response = await apiClient.get(`/doctors?${params.toString()}`)
-    return response.data
+    const params = new RequestBuilder()
+      .addParams(filters)
+      .toString()
+
+    const data = await ApiService.get<{ doctors: Doctor[]; total: number }>(
+      `/api/doctors${params ? `?${params}` : ''}`
+    )
+    
+    // Cache the result for 5 minutes
+    CacheManager.set(cacheKey, data, 5 * 60 * 1000)
+    
+    return data
   },
 
   // Get doctor by ID
   getDoctorById: async (id: string) => {
-    const response = await apiClient.get(`/doctors/${id}`)
-    return response.data
+    const cacheKey = `doctor-${id}`
+    const cached = CacheManager.get(cacheKey)
+    if (cached) return cached
+
+    const data = await ApiService.get<Doctor>(`/api/doctors/${id}`)
+    
+    CacheManager.set(cacheKey, data, 10 * 60 * 1000) // Cache for 10 minutes
+    
+    return data
   },
 
   // Create new doctor (admin only)
   createDoctor: async (doctorData: Omit<Doctor, 'id'>) => {
-    const response = await apiClient.post('/doctors', doctorData)
-    return response.data
+    const data = await ApiService.post<Doctor>('/api/doctors', doctorData)
+    
+    // Clear cache after creating
+    CacheManager.clear()
+    
+    return data
   },
 
   // Update doctor (admin only)
   updateDoctor: async (id: string, doctorData: Partial<Doctor>) => {
-    const response = await apiClient.put(`/doctors/${id}`, doctorData)
-    return response.data
+    const data = await ApiService.put<Doctor>(`/api/doctors/${id}`, doctorData)
+    
+    // Clear specific doctor cache
+    CacheManager.remove(`doctor-${id}`)
+    
+    return data
   },
 
   // Delete doctor (admin only)
   deleteDoctor: async (id: string) => {
-    const response = await apiClient.delete(`/doctors/${id}`)
-    return response.data
+    const data = await ApiService.delete(`/api/doctors/${id}`)
+    
+    // Clear cache after deletion
+    CacheManager.remove(`doctor-${id}`)
+    
+    return data
   },
 
   // Get doctor's time slots
   getDoctorTimeSlots: async (doctorId: string, date?: string) => {
     const params = date ? `?date=${date}` : ''
-    const response = await apiClient.get(`/doctors/${doctorId}/time-slots${params}`)
-    return response.data
+    return await ApiService.get(`/api/doctors/${doctorId}/time-slots${params}`)
   },
 
   // Get doctor's appointments
   getDoctorAppointments: async (doctorId: string, filters: any = {}) => {
-    const params = new URLSearchParams()
-    params.append('doctorId', doctorId)
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString())
-      }
-    })
+    const params = new RequestBuilder()
+      .addParam('doctorId', doctorId)
+      .addParams(filters)
+      .toString()
 
-    const response = await apiClient.get(`/appointments?${params.toString()}`)
-    return response.data
+    return await ApiService.get(`/api/appointments?${params}`)
   },
 
   // Search doctors by specialization

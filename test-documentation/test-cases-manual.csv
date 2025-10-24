@@ -1,0 +1,125 @@
+Test Case ID,Test Case Sub ID,Functionality,Test Case Name,Objective,Priority,Regression,Preconditions,Test Data,Test Steps,Expected Results,Actual Results,Pass / Fail,Comments
+TC_AUTH_001,TC_AUTH_001.1,Authentication - Login,Valid Login with Correct Credentials,Verify user can login with valid credentials,High,Yes,User account exists in system,"Email: user@example.com, Password: Password123!","1. Navigate to login page
+2. Enter valid email
+3. Enter valid password
+4. Click login button","1. User is redirected to dashboard
+2. Welcome message displayed
+3. User session created",,,
+TC_AUTH_001,TC_AUTH_001.2,Authentication - Login,Invalid Login with Wrong Password,Verify system prevents login with incorrect password,High,Yes,User account exists in system,"Email: user@example.com, Password: wrongpass","1. Navigate to login page
+2. Enter valid email
+3. Enter invalid password
+4. Click login button","1. Error message displayed
+2. User remains on login page
+3. No session created",,,
+TC_AUTH_002,TC_AUTH_002.1,Authentication - Registration,New User Registration,Verify new users can register successfully,High,Yes,Email not already registered,"Name: John Doe, Email: newuser@example.com, Phone: 0771234567, Password: Password123!","1. Navigate to registration page
+2. Fill all required fields
+3. Accept terms
+4. Click register button","1. Registration successful message
+2. Redirect to login page
+3. Confirmation email sent",,,
+TC_AUTH_002,TC_AUTH_002.2,Authentication - Registration,Duplicate Email Registration,Verify system prevents duplicate email registration,Medium,Yes,Email already exists in system,"Email: existing@example.com","1. Navigate to registration page
+2. Enter existing email
+3. Fill other fields
+4. Click register","1. Error message about existing email
+2. Registration prevented",,,
+TC_BOOK_001,TC_BOOK_001.1,Appointment Booking,Search Doctor by Name,Verify users can search for doctors by name,High,Yes,User is logged in,"Search term: Dr. Smith","1. Navigate to doctor search
+2. Enter doctor name
+3. Click search","1. Search results displayed
+2. Matching doctors shown
+3. Doctor cards with details",,,
+TC_BOOK_001,TC_BOOK_001.2,Appointment Booking,Filter by Specialization,Verify filtering doctors by specialization works,High,Yes,User is logged in,"Specialization: Cardiology","1. Go to doctor search
+2. Select specialization filter
+3. Apply filter","1. Only cardiologists shown
+2. Filter tag displayed
+3. Result count updated",,,
+TC_BOOK_002,TC_BOOK_002.1,Appointment Booking,Book Appointment with Available Slot,Verify users can book appointment successfully,High,Yes,"User logged in, Doctor selected","Date: 2024-12-01, Time: 10:00 AM","1. Select doctor
+2. Choose date
+3. Select time slot
+4. Confirm booking","1. Booking confirmed
+2. Appointment number generated
+3. Confirmation notification",,,
+TC_BOOK_002,TC_BOOK_002.2,Appointment Booking,Prevent Double Booking,Verify system prevents booking same slot twice,High,Yes,Time slot already booked,"Date: 2024-12-01, Time: 10:00 AM (booked)","1. Try to book occupied slot
+2. Click confirm","1. Error message displayed
+2. Slot shown as unavailable
+3. Booking prevented",,,
+TC_BOOK_003,TC_BOOK_003.1,Appointment Management,Reschedule Appointment,Verify users can reschedule appointments,Medium,Yes,Existing appointment booked,"New Date: 2024-12-15, Time: 3:00 PM","1. Go to appointments
+2. Select appointment
+3. Click reschedule
+4. Choose new slot
+5. Confirm","1. Reschedule successful
+2. New time confirmed
+3. Notification sent",,,
+TC_BOOK_003,TC_BOOK_003.2,Appointment Management,Cancel Appointment,Verify users can cancel appointments,Medium,Yes,Existing appointment booked,"Cancellation reason: Changed plans","1. Go to appointments
+2. Select appointment
+3. Click cancel
+4. Enter reason
+5. Confirm","1. Cancellation successful
+2. Status updated to cancelled
+3. Refund initiated if paid",,,
+TC_PAY_001,TC_PAY_001.1,Payment - Credit Card,Successful Card Payment,Verify credit card payment processing,High,Yes,Appointment pending payment,"Card: 4111111111111111, CVV: 123, Expiry: 12/25","1. Navigate to payment
+2. Select credit card
+3. Enter card details
+4. Submit payment","1. Payment successful
+2. Transaction ID generated
+3. Receipt available",,,
+TC_PAY_001,TC_PAY_001.2,Payment - Credit Card,Declined Card Payment,Verify handling of declined cards,High,Yes,Appointment pending payment,"Card: 4000000000000002 (test decline)","1. Enter declined card
+2. Submit payment","1. Payment failed message
+2. Retry option available
+3. No charge made",,,
+TC_PAY_002,TC_PAY_002.1,Payment - Bank Transfer,Bank Transfer Instructions,Verify bank transfer payment option,Medium,Yes,Appointment pending payment,"Bank: Commercial Bank","1. Select bank transfer
+2. Choose bank
+3. View instructions","1. Transfer details shown
+2. Reference number displayed
+3. Upload slip option",,,
+TC_PAY_003,TC_PAY_003.1,Payment - Refund,Process Refund,Verify refund for cancelled appointment,High,Yes,Paid appointment exists,"Appointment ID: APT-001","1. Cancel paid appointment
+2. Request refund
+3. Confirm","1. Refund initiated
+2. Timeline shown (3-5 days)
+3. Refund status trackable",,,
+TC_NOTIF_001,TC_NOTIF_001.1,Notifications,Real-time Notification Delivery,Verify real-time notifications work,Medium,Yes,"User logged in, WebSocket connected",Test notification data,"1. Trigger notification event
+2. Check notification appears","1. Toast notification shown
+2. Notification badge updated
+3. Sound played (if enabled)",,,
+TC_NOTIF_001,TC_NOTIF_001.2,Notifications,Notification Persistence,Verify notifications are saved,Medium,Yes,Notifications received,N/A,"1. Receive notifications
+2. Refresh page
+3. Check notification panel","1. Notifications still present
+2. Read/unread status maintained",,,
+TC_MOB_001,TC_MOB_001.1,Mobile - Responsive,Mobile Layout Display,Verify mobile responsive design,High,Yes,Mobile device or viewport,"Viewport: 375x667","1. Open site on mobile
+2. Navigate pages
+3. Check layout","1. Mobile menu visible
+2. Content fits screen
+3. No horizontal scroll",,,
+TC_MOB_001,TC_MOB_001.2,Mobile - Touch,Touch Interactions,Verify touch gestures work,High,Yes,Touch-enabled device,N/A,"1. Tap buttons
+2. Swipe carousel
+3. Long press for menu","1. Buttons respond to tap
+2. Swipe changes content
+3. Context menu appears",,,
+TC_PWA_001,TC_PWA_001.1,PWA - Installation,Install PWA,Verify PWA installation process,Medium,Yes,Chrome/Edge browser,N/A,"1. Visit site
+2. Click install prompt
+3. Confirm installation","1. PWA installed
+2. Icon on home screen
+3. Opens in app mode",,,
+TC_PWA_001,TC_PWA_001.2,PWA - Offline,Offline Functionality,Verify PWA works offline,Medium,Yes,PWA installed,N/A,"1. Go offline
+2. Navigate cached pages
+3. Try new page","1. Cached pages load
+2. Offline indicator shown
+3. Offline page for uncached",,,
+TC_PERF_001,TC_PERF_001.1,Performance,Page Load Time,Verify acceptable load times,Medium,Yes,Good network connection,N/A,"1. Clear cache
+2. Load dashboard
+3. Measure time","1. Page loads < 3 seconds
+2. Interactive < 5 seconds
+3. No layout shifts",,,
+TC_PERF_001,TC_PERF_001.2,Performance,Slow Network Performance,Verify app works on slow connection,Medium,Yes,Network throttled to 3G,N/A,"1. Set network to 3G
+2. Navigate site
+3. Perform actions","1. Pages still load
+2. Loading indicators shown
+3. No timeouts",,,
+TC_SEC_001,TC_SEC_001.1,Security,Session Timeout,Verify session expires after inactivity,High,Yes,User logged in,N/A,"1. Login
+2. Wait 15 minutes idle
+3. Try action","1. Session expired message
+2. Redirect to login
+3. Must re-authenticate",,,
+TC_SEC_001,TC_SEC_001.2,Security,Payment Data Masking,Verify sensitive data is masked,High,Yes,Payment page open,"Card number: 4111111111111111","1. Enter card number
+2. Move to next field","1. Card number masked
+2. Only last 4 digits shown
+3. CVV always hidden",,,
