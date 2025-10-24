@@ -1,6 +1,36 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { z } from 'zod'
+import { prisma } from '../../../lib/prisma'
 import { apiResponse, handleApiError } from '../../../lib/validation'
 import { requireAuth } from '../../../lib/auth'
+
+// Validation schemas
+const doctorFiltersSchema = z.object({
+  search: z.string().optional(),
+  specialization: z.string().optional(),
+  hospitalId: z.string().optional(),
+  city: z.string().optional(),
+  availability: z.string().optional(),
+  rating: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  minExperience: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  sortBy: z.string().optional().default('name'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
+  limit: z.string().optional().transform(val => val ? parseInt(val) : 10)
+})
+
+const doctorCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+  specialization: z.string().min(1, 'Specialization is required'),
+  qualification: z.string().min(1, 'Qualification is required'),
+  experience: z.number().min(0, 'Experience must be a positive number'),
+  consultationFee: z.number().min(0, 'Consultation fee must be positive'),
+  hospitalId: z.string().min(1, 'Hospital ID is required'),
+  description: z.string().optional(),
+  languages: z.array(z.string()).optional().default(['English']),
+  availableDays: z.array(z.string()).optional().default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
+})
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {
@@ -15,19 +45,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
 async function getDoctors(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const validatedQuery = doctorFiltersSchema.parse(req.query)
     const {
-      search = '',
-      specialization = '',
-      hospitalId = '',
-      city = '',
-      availability = '',
-      rating = '',
-      minExperience = '',
-      sortBy = 'name',
-      sortOrder = 'asc',
-      page = '1',
-      limit = '10'
-    } = req.query
+      search,
+      specialization,
+      hospitalId,
+      city,
+      availability,
+      rating,
+      minExperience,
+      sortBy,
+      sortOrder,
+      page,
+      limit
+    } = validatedQuery
 
     // Mock data for development
     const mockDoctors = [

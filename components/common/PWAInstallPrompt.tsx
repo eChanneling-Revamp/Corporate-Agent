@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { usePWA } from '../../hooks/usePWA'
 
 const PWAInstallPrompt: React.FC = () => {
@@ -10,7 +11,7 @@ const PWAInstallPrompt: React.FC = () => {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-lg border border-blue-200 p-4 z-50">
       <div className="flex items-start">
-        <img src="/logo.png" alt="App Icon" className="w-12 h-12 rounded-lg mr-3" />
+        <Image src="/logo.png" alt="App Icon" width={48} height={48} className="w-12 h-12 rounded-lg mr-3" style={{ width: '48px', height: 'auto' }} />
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">Install eChanneling</h3>
           <p className="text-sm text-gray-600 mt-1">

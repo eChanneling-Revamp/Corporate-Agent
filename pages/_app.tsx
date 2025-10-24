@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner'
 import { connectSocket } from '../lib/socketClient'
 import { setupGlobalErrorHandlers } from '../lib/errorHandler'
 import PWAInstallPrompt from '../components/common/PWAInstallPrompt'
+import '../lib/devtools'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }: { Component: any, pageProps: any }) {
@@ -17,8 +18,17 @@ function MyApp({ Component, pageProps }: { Component: any, pageProps: any }) {
     // Setup global error handlers
     setupGlobalErrorHandlers()
 
-    // Connect to socket server (optional - won't show errors if unavailable)
-    const socket = connectSocket()
+    // Only connect to socket server in production or if explicitly enabled
+    if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_WEBSOCKET === 'true') {
+      try {
+        const socket = connectSocket()
+        console.log('WebSocket connection initialized')
+      } catch (error) {
+        console.warn('WebSocket connection failed (optional feature)')
+      }
+    } else {
+      console.log('WebSocket disabled in development mode')
+    }
 
     // Cleanup on unmount
     return () => {

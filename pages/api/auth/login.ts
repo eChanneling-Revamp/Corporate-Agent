@@ -5,6 +5,12 @@ import { loginSchema, apiResponse, handleApiError } from '../../../lib/validatio
 import { generateTokens } from '../../../lib/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Apply security headers
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('X-XSS-Protection', '1; mode=block')
+
   if (req.method !== 'POST') {
     return res.status(405).json(apiResponse.error('Method Not Allowed', 405))
   }

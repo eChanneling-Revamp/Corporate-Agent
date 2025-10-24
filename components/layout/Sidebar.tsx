@@ -119,6 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
               width={120}
               height={40}
               className="object-contain hover:opacity-80 transition-opacity"
+              style={{ width: 'auto', height: '40px' }}
               priority
             />
           ) : (
@@ -128,6 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
               width={32}
               height={32}
               className="object-contain hover:opacity-80 transition-opacity"
+              style={{ width: '32px', height: 'auto' }}
               priority
             />
           )}

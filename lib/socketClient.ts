@@ -83,28 +83,44 @@ class SocketClient {
   }
 
   // Initialize socket connection
-  connect(): Socket {
+  connect(): Socket | null {
     if (this.socket?.connected) {
       return this.socket
     }
 
+    // In development, WebSocket server is optional
+    if (process.env.NODE_ENV === 'development') {
+      console.log('WebSocket server is optional in development mode')
+    }
+
     const token = Cookies.get('authToken')
     
-    this.socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-      auth: {
-        token
-      },
-      reconnection: true,
-      reconnectionAttempts: 3, // Reduce from 5 to 3 attempts
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 5000,
-      timeout: 10000, // Reduce timeout from 20s to 10s
-    })
+    try {
+      this.socket = io(SOCKET_URL, {
+        transports: ['websocket', 'polling'],
+        auth: {
+          token
+        },
+        reconnection: true,
+        reconnectionAttempts: 2, // Reduce attempts in development
+        reconnectionDelay: 3000,
+        reconnectionDelayMax: 5000,
+        timeout: 5000, // Reduce timeout to 5s
+        autoConnect: false, // Don't auto-connect to avoid immediate errors
+      })
 
-    this.setupDefaultEventHandlers()
-    
-    return this.socket
+      this.setupDefaultEventHandlers()
+      
+      // Only connect if we're in production or if explicitly enabled
+      if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_WEBSOCKET === 'true') {
+        this.socket.connect()
+      }
+      
+      return this.socket
+    } catch (error) {
+      console.warn('WebSocket initialization failed:', error)
+      return null
+    }
   }
 
   // Disconnect socket
@@ -138,12 +154,27 @@ class SocketClient {
     })
 
     this.socket.on(SocketEvents.CONNECT_ERROR, (error) => {
-      console.log('Socket connection error:', error.message || error)
+      // Suppress console errors in development for optional WebSocket
+      if (process.env.NODE_ENV === 'development') {
+        // Only log once to avoid spam
+        if (this.reconnectAttempts === 0) {
+          console.warn('WebSocket server not available (optional in development)')
+        }
+      } else {
+        console.log('Socket connection error:', error.message || error)
+      }
       
-      // Only show error after multiple failed attempts
+      this.reconnectAttempts++
+      
+      // In development, stop trying after first attempt
+      if (process.env.NODE_ENV === 'development' && this.reconnectAttempts >= 1) {
+        this.socket?.disconnect()
+        return
+      }
+      
+      // Only show error after multiple failed attempts in production
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.warn('Socket server unavailable. Real-time features disabled.')
-        // Don't show toast - socket server is optional
       }
     })
 

@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
-
-const prisma = new PrismaClient()
+import { prisma } from '../../../lib/prisma'
+import { apiResponse, handleApiError } from '../../../lib/validation'
+import { requireAuth } from '../../../lib/auth'
 
 // Validation schemas
 const paymentCreateSchema = z.object({
@@ -29,35 +29,29 @@ const paymentFiltersSchema = z.object({
   paymentMethod: z.enum(['CREDIT_CARD', 'DEBIT_CARD', 'BANK_TRANSFER', 'CASH', 'MOBILE_PAYMENT']).optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
-  amountFrom: z.string().transform(val => parseFloat(val)).optional(),
-  amountTo: z.string().transform(val => parseFloat(val)).optional(),
-  limit: z.string().transform(val => parseInt(val)).optional().default(50),
-  offset: z.string().transform(val => parseInt(val)).optional().default(0)
+  amountFrom: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  amountTo: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  limit: z.string().optional().transform(val => val ? parseInt(val) : 50),
+  offset: z.string().optional().transform(val => val ? parseInt(val) : 0)
 })
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     switch (req.method) {
       case 'GET':
-        await handleGet(req, res)
-        break
+        return await handleGet(req, res)
       case 'POST':
-        await handlePost(req, res)
-        break
+        return await handlePost(req, res)
       default:
         res.setHeader('Allow', ['GET', 'POST'])
-        res.status(405).json({ error: `Method ${req.method} not allowed` })
+        return res.status(405).json(apiResponse.error('Method Not Allowed', 405))
     }
   } catch (error) {
-    console.error('Payments API error:', error)
-    res.status(500).json({ 
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    })
-  } finally {
-    await prisma.$disconnect()
+    return handleApiError(error, res)
   }
 }
+
+export default requireAuth(handler)
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {

@@ -20,29 +20,28 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('week')
 
+  // Calculate statistics with defensive programming - moved above useEffect
+  const appointmentsArray = Array.isArray(appointments) ? appointments : []
+
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        console.log('Fetching appointments...')
-        const result = await dispatch(fetchAppointments({}))
-        console.log('Fetch result:', result)
-      } catch (error) {
-        console.error('Error fetching appointments:', error)
+    // Only fetch if appointments array is empty to prevent duplicate calls
+    if (appointmentsArray.length === 0) {
+      const loadData = async () => {
+        setLoading(true)
+        try {
+          console.log('Fetching appointments...')
+          const result = await dispatch(fetchAppointments({}))
+          console.log('Fetch result:', result)
+        } catch (error) {
+          console.error('Error fetching appointments:', error)
+        }
+        setLoading(false)
       }
+      loadData()
+    } else {
       setLoading(false)
     }
-    loadData()
-  }, [dispatch])
-
-  // Debug logging
-  useEffect(() => {
-    console.log('Appointments from Redux:', appointments)
-    console.log('Is appointments an array?', Array.isArray(appointments))
-  }, [appointments])
-
-  // Calculate statistics with defensive programming
-  const appointmentsArray = Array.isArray(appointments) ? appointments : []
+  }, [dispatch, appointmentsArray.length])
   
   const todayAppointments = appointmentsArray.filter(apt => {
     const today = new Date().toISOString().split('T')[0]

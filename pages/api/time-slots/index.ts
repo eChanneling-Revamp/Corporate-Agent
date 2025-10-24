@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
-
-const prisma = new PrismaClient()
+import { prisma } from '../../../lib/prisma'
+import { apiResponse, handleApiError } from '../../../lib/validation'
+import { requireAuth } from '../../../lib/auth'
 
 // Validation schemas
 const timeSlotCreateSchema = z.object({
-  doctorId: z.string().cuid(),
+  doctorId: z.string().min(1, 'Doctor ID is required'),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format"
   }),
@@ -20,39 +20,31 @@ const timeSlotCreateSchema = z.object({
 const timeSlotUpdateSchema = timeSlotCreateSchema.partial()
 
 const timeSlotFiltersSchema = z.object({
-  doctorId: z.string().cuid().optional(),
+  doctorId: z.string().optional(),
   date: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   isActive: z.string().transform((val) => val === 'true').optional(),
   hasAvailability: z.string().transform((val) => val === 'true').optional(),
-  limit: z.string().transform((val) => parseInt(val)).optional(),
-  offset: z.string().transform((val) => parseInt(val)).optional(),
+  limit: z.string().optional().transform((val) => val ? parseInt(val) : 50),
+  offset: z.string().optional().transform((val) => val ? parseInt(val) : 0),
   specialization: z.string().optional(),
-  hospitalId: z.string().cuid().optional()
+  hospitalId: z.string().optional()
 })
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     switch (req.method) {
       case 'GET':
-        await handleGet(req, res)
-        break
+        return await handleGet(req, res)
       case 'POST':
-        await handlePost(req, res)
-        break
+        return await handlePost(req, res)
       default:
         res.setHeader('Allow', ['GET', 'POST'])
-        res.status(405).json({ error: `Method ${req.method} not allowed` })
+        return res.status(405).json(apiResponse.error('Method Not Allowed', 405))
     }
   } catch (error) {
-    console.error('Time slots API error:', error)
-    res.status(500).json({ 
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    })
-  } finally {
-    await prisma.$disconnect()
+    return handleApiError(error, res)
   }
 }
 
@@ -94,7 +86,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     
     if (hasAvailability) {
       where.currentBookings = {
-        lt: prisma.$queryRaw`"maxAppointments"`
+        lt: prisma.$queryRaw`max_appointments`
       }
     }
 
@@ -141,27 +133,28 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       ...slot,
       availableSlots: slot.maxAppointments - slot.currentBookings,
       status: getSlotStatus(slot.maxAppointments, slot.currentBookings),
-      appointments: slot.appointments.length
+      appointments: slot.appointments.length,
+      consultationFee: Number(slot.consultationFee)
     }))
 
     // Get total count for pagination
     const totalCount = await prisma.timeSlot.count({ where })
 
-    res.status(200).json({
-      data: transformedSlots,
+    return res.status(200).json(apiResponse.success({
+      timeSlots: transformedSlots,
       pagination: {
         total: totalCount,
         limit,
         offset,
-        hasMore: offset + limit < totalCount
+        hasMore: offset + limit < totalCount,
+        currentPage: Math.floor(offset / limit) + 1,
+        totalPages: Math.ceil(totalCount / limit)
       }
-    })
+    }, 'Time slots retrieved successfully'))
+
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({
-        error: 'Validation error',
-        details: error.errors
-      })
+      return res.status(400).json(apiResponse.error('Validation error', 400, error.issues))
     } else {
       throw error
     }
@@ -184,11 +177,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     // Verify doctor exists
     const doctor = await prisma.doctor.findUnique({
-      where: { id: doctorId }
+      where: { id: doctorId },
+      include: { hospital: true }
     })
 
     if (!doctor) {
-      return res.status(404).json({ error: 'Doctor not found' })
+      return res.status(404).json(apiResponse.error('Doctor not found', 404))
     }
 
     // Check for overlapping time slots
@@ -220,10 +214,9 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     })
 
     if (existingSlot) {
-      return res.status(409).json({ 
-        error: 'Time slot conflicts with existing slot',
+      return res.status(409).json(apiResponse.error('Time slot conflicts with existing slot', 409, {
         conflictingSlot: existingSlot
-      })
+      }))
     }
 
     // Create the time slot
@@ -247,20 +240,16 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       }
     })
 
-    res.status(201).json({
-      message: 'Time slot created successfully',
-      data: {
-        ...timeSlot,
-        availableSlots: timeSlot.maxAppointments - timeSlot.currentBookings,
-        status: getSlotStatus(timeSlot.maxAppointments, timeSlot.currentBookings)
-      }
-    })
+    return res.status(201).json(apiResponse.success({
+      ...timeSlot,
+      availableSlots: timeSlot.maxAppointments - timeSlot.currentBookings,
+      status: getSlotStatus(timeSlot.maxAppointments, timeSlot.currentBookings),
+      consultationFee: Number(timeSlot.consultationFee)
+    }, 'Time slot created successfully'))
+
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({
-        error: 'Validation error',
-        details: error.errors
-      })
+      return res.status(400).json(apiResponse.error('Validation error', 400, error.issues))
     } else {
       throw error
     }
@@ -274,3 +263,5 @@ function getSlotStatus(maxAppointments: number, currentBookings: number): 'AVAIL
   if (utilization >= 0.8) return 'FILLING_FAST'
   return 'AVAILABLE'
 }
+
+export default requireAuth(handler)
