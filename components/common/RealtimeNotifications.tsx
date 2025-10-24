@@ -12,9 +12,9 @@ import {
   Trash2,
   CheckCheck
 } from 'lucide-react'
-import { useNotifications, useSocket } from '@/hooks/useSocket'
+import { useNotifications, useSocket } from '../../hooks/useSocket'
 import { format, formatDistanceToNow } from 'date-fns'
-import { showToast } from '@/components/common/ToastProvider'
+import { showToast } from './ToastProvider'
 
 interface Notification {
   id: string
