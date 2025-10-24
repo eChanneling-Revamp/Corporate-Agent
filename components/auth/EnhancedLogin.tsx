@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useDispatch } from 'react-redux'
 import {
-  User,
   Lock,
   Mail,
   Eye,
@@ -14,15 +13,13 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  Building,
-  UserCheck,
   Activity,
   Globe,
-  Clock,
   ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { setCredentials } from '../../store/slices/authSlice'
+import { loginUser } from '../../store/slices/authSlice'
+import { AppDispatch } from '../../store/store'
 
 interface LoginMetrics {
   lastLogin?: Date
@@ -35,17 +32,9 @@ interface LoginMetrics {
   location?: string
 }
 
-interface SecurityFeatures {
-  twoFactorEnabled: boolean
-  biometricEnabled: boolean
-  sessionTimeout: number
-  ipWhitelisting: boolean
-  deviceTrust: boolean
-}
-
 const EnhancedLogin: React.FC = () => {
   const router = useRouter()
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   
   // Form states
   const [email, setEmail] = useState('')
@@ -66,17 +55,7 @@ const EnhancedLogin: React.FC = () => {
   const [capsLockOn, setCapsLockOn] = useState(false)
   
   // Session tracking
-  const [sessionInfo, setSessionInfo] = useState<LoginMetrics | null>(null)
   const [loginHistory, setLoginHistory] = useState<LoginMetrics[]>([])
-  
-  // Security features
-  const [securityFeatures, setSecurityFeatures] = useState<SecurityFeatures>({
-    twoFactorEnabled: false,
-    biometricEnabled: false,
-    sessionTimeout: 30,
-    ipWhitelisting: false,
-    deviceTrust: false
-  })
 
   // Check for biometric support
   useEffect(() => {
@@ -186,9 +165,6 @@ const EnhancedLogin: React.FC = () => {
       location: 'Colombo, Sri Lanka' // Would come from IP geolocation
     }
     
-    // Store session info
-    setSessionInfo(metrics)
-    
     // Update login history
     const newHistory = [metrics, ...loginHistory].slice(0, 5)
     setLoginHistory(newHistory)
@@ -201,11 +177,10 @@ const EnhancedLogin: React.FC = () => {
       setTrustedDevice(true)
     }
     
-    // Dispatch to Redux store
-    dispatch(setCredentials({
-      user: userData,
-      token: 'mock-jwt-token',
-      refreshToken: 'mock-refresh-token'
+    // Dispatch to Redux store using loginUser action
+    await dispatch(loginUser({
+      email: userData.email,
+      password: 'dummy-password' // In real app, this would be handled differently
     }))
     
     // Show success message
