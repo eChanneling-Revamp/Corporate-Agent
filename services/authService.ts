@@ -8,7 +8,7 @@ const getApiBaseUrl = () => {
     return '/api'
   }
   // In development, use localhost with the correct port
-  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api'
+  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api'
 }
 
 const API_BASE_URL = getApiBaseUrl()

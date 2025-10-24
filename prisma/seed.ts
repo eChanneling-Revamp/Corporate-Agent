@@ -70,9 +70,10 @@ async function main() {
       create: {
         id: 'doctor1',
         name: 'Dr. Sarah Johnson',
+        email: 'sarah.johnson@asiri.lk',
         specialization: 'Cardiology',
         qualification: 'MBBS, MD Cardiology',
-        experience: '15',
+        experience: 15,
         consultationFee: 3500.00,
         rating: 4.8,
         description: 'Experienced cardiologist specializing in preventive cardiology and heart disease management.',
@@ -87,9 +88,10 @@ async function main() {
       create: {
         id: 'doctor2',
         name: 'Dr. Rajesh Kumar',
+        email: 'rajesh.kumar@nawaloka.lk',
         specialization: 'Neurology',
         qualification: 'MBBS, MD Neurology',
-        experience: '12',
+        experience: 12,
         consultationFee: 4000.00,
         rating: 4.6,
         description: 'Neurologist with expertise in treating neurological disorders and brain conditions.',
@@ -104,9 +106,10 @@ async function main() {
       create: {
         id: 'doctor3',
         name: 'Dr. Priya Fernando',
+        email: 'priya.fernando@asiri.lk',
         specialization: 'Pediatrics',
         qualification: 'MBBS, MD Pediatrics',
-        experience: '10',
+        experience: 10,
         consultationFee: 3000.00,
         rating: 4.9,
         description: 'Pediatrician dedicated to providing comprehensive healthcare for children.',
@@ -130,7 +133,7 @@ async function main() {
     
     for (const doctor of doctors) {
       // Morning slots (9:00 AM - 12:00 PM)
-      const morningSlot = await prisma.timeSlot.upsert({
+      await prisma.timeSlot.upsert({
         where: {
           doctorId_date_startTime: {
             doctorId: doctor.id,
@@ -151,7 +154,7 @@ async function main() {
       })
       
       // Evening slots (6:00 PM - 9:00 PM)
-      const eveningSlot = await prisma.timeSlot.upsert({
+      await prisma.timeSlot.upsert({
         where: {
           doctorId_date_startTime: {
             doctorId: doctor.id,
