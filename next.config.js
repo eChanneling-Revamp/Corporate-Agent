@@ -3,20 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-      {
-        protocol: 'https',
-        hostname: 'corporate-agent-frontend.vercel.app',
-      },
-    ],
+    domains: ['images.unsplash.com', 'localhost', 'corporate-agent-frontend.vercel.app'],
   },
   env: {
     CUSTOM_KEY: 'my-value',
