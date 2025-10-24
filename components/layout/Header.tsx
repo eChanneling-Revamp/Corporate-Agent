@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNotifications } from '../../hooks/useSocket'
+import NotificationDropdown from '../../components/common/NotificationDropdown'
 import { 
   Bell, 
   Menu, 
@@ -22,6 +24,21 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, toggleMobileMenu, mobileMenuOpen }) => {
   const router = useRouter()
   const { user, logout } = useAuth()
+  const { notifications, unreadCount, markAsRead, clearAll } = useNotifications()
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notificationRef = useRef<HTMLDivElement>(null)
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Function to get page title based on current path
   const getPageTitle = () => {
@@ -104,14 +121,29 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, toggleMobileMenu, mobile
         </div>
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notificationRef}>
           <button 
-            className="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none" 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors" 
             title="Notifications"
+            aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
           >
-            <Bell size={18} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <Bell size={18} className={unreadCount > 0 ? 'animate-pulse' : ''} />
+            {unreadCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
+          
+          {showNotifications && (
+            <NotificationDropdown 
+              notifications={notifications}
+              onClose={() => setShowNotifications(false)}
+              onMarkAsRead={markAsRead}
+              onClearAll={clearAll}
+            />
+          )}
         </div>
 
         {/* User Profile */}
