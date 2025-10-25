@@ -34,6 +34,8 @@ model User {
   notifications     Notification[]
   reports          Report[]
   activityLogs     ActivityLog[]
+  corporatePackages CorporatePackage[] @relation("CorporateUser")
+  createdPackages  CorporatePackage[] @relation("PackageCreator")
   
   @@map("users")
 }
@@ -152,6 +154,8 @@ model Appointment {
   timeSlot            TimeSlot          @relation(fields: [timeSlotId], references: [id])
   bookedBy            User              @relation(fields: [bookedById], references: [id])
   payments            Payment[]
+  corporatePackageAppointments CorporatePackageAppointment[]
+  notificationLogs    NotificationLog[]
   
   @@map("appointments")
 }
@@ -249,11 +253,137 @@ model ActivityLog {
   @@map("activity_logs")
 }
 
+model CorporatePackage {
+  id                    String    @id @default(cuid())
+  packageNumber         String    @unique
+  corporateId           String
+  packageName           String
+  packageType           String    // "ANNUAL", "MONTHLY", "CUSTOM"
+  description           String?
+  totalAppointments     Int
+  usedAppointments      Int       @default(0)
+  remainingAppointments Int
+  packageValue          Decimal   @db.Decimal(10, 2)
+  discountPercentage    Decimal   @default(0) @db.Decimal(5, 2)
+  validFromDate         DateTime  @db.Date
+  validToDate           DateTime  @db.Date
+  restrictions          Json?     // Package restrictions and terms
+  isActive              Boolean   @default(true)
+  createdBy             String
+  deactivatedBy         String?
+  deactivatedAt         DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  corporate             User               @relation("CorporateUser", fields: [corporateId], references: [id])
+  creator               User               @relation("PackageCreator", fields: [createdBy], references: [id])
+  packageBenefits       CorporatePackageBenefit[]
+  packageAppointments   CorporatePackageAppointment[]
+
+  @@map("corporate_packages")
+}
+
+model CorporatePackageBenefit {
+  id                  String           @id @default(cuid())
+  packageId           String
+  benefitType         String           // "DISCOUNT", "FREE_CONSULTATION", "PRIORITY_BOOKING"
+  benefitDescription  String
+  benefitValue        Decimal?         @db.Decimal(10, 2)
+  isActive            Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+
+  // Relations
+  package             CorporatePackage @relation(fields: [packageId], references: [id])
+
+  @@map("corporate_package_benefits")
+}
+
+model CorporatePackageAppointment {
+  id              String           @id @default(cuid())
+  packageId       String
+  appointmentId   String
+  usedAt          DateTime         @default(now())
+  discountApplied Decimal?         @db.Decimal(10, 2)
+
+  // Relations
+  package         CorporatePackage @relation(fields: [packageId], references: [id])
+  appointment     Appointment      @relation(fields: [appointmentId], references: [id])
+
+  @@unique([packageId, appointmentId])
+  @@map("corporate_package_appointments")
+}
+
+model NotificationLog {
+  id              String    @id @default(cuid())
+  notificationId  String    @unique
+  type            String    // 'appointment_confirmation', 'reminder', etc.
+  method          String    // 'sms', 'email'
+  recipient       String    // Phone number or email address
+  status          String    // 'pending', 'sent', 'failed', 'scheduled'
+  priority        String    @default("normal") // 'high', 'normal', 'low'
+  templateData    Json?     // Data used for template variables
+  appointmentId   String?
+  triggeredBy     String?
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  failureReason   String?
+  providerResponse Json?    // Response from SMS/Email provider
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@map("notification_logs")
+}
+
+model Translation {
+  id         String   @id @default(cuid())
+  language   String   // 'en', 'si', 'ta'
+  module     String   // 'common', 'appointments', 'reports', etc.
+  key        String   // Translation key identifier
+  value      String   // Translated text
+  context    String?  // Additional context for translators
+  createdBy  String
+  updatedBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([language, module, key], name: "language_module_key")
+  @@map("translations")
+}
+
+model ExportJob {
+  id              String        @id @default(cuid())
+  jobId           String        @unique
+  entityType      String        // 'appointments', 'patients', 'doctors', etc.
+  format          ExportFormat
+  fileName        String
+  status          ExportStatus  @default(PROCESSING)
+  exportedBy      String
+  totalRecords    Int           @default(0)
+  processedRecords Int          @default(0)
+  filters         Json?         // Export filters applied
+  columns         String[]      // Selected columns for export
+  filePath        String?       // Generated file path
+  fileSize        Int?          // File size in bytes
+  downloadUrl     String?       // URL for file download
+  expiresAt       DateTime?     // URL expiry time
+  emailRecipients String[]      // Email addresses for delivery
+  errorMessage    String?       // Error details if failed
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("export_jobs")
+}
+
 // Enums
 enum UserRole {
   ADMIN
   SUPERVISOR
   AGENT
+  CORPORATE
 }
 
 enum Gender {
@@ -268,6 +398,7 @@ enum AppointmentStatus {
   COMPLETED
   NO_SHOW
   RESCHEDULED
+  UNPAID
 }
 
 enum PaymentStatus {
@@ -276,6 +407,7 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   CANCELLED
+  UNPAID
 }
 
 enum PaymentMethod {
@@ -323,4 +455,18 @@ enum ReportStatus {
   GENERATING
   COMPLETED
   FAILED
+}
+
+enum ExportFormat {
+  CSV
+  EXCEL
+  PDF
+  JSON
+}
+
+enum ExportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
