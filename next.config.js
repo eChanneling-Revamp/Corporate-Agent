@@ -49,6 +49,20 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
   },
+  
+  // CSS configuration for better build compatibility
+  webpack: (config, { dev, isServer }) => {
+    // Fix CSS handling on build
+    if (!dev && !isServer) {
+      config.optimization.splitChunks.cacheGroups.default = {
+        minChunks: 2,
+        priority: -20,
+        reuseExistingChunk: true,
+      }
+    }
+    
+    return config
+  },
   async redirects() {
     return [
       {
