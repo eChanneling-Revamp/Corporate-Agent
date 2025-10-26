@@ -51,8 +51,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip cross-origin requests and chrome extension requests
+  if (!event.request.url.startsWith(self.location.origin) || 
+      event.request.url.includes('chrome-extension') ||
+      event.request.url.includes('.well-known') ||
+      event.request.url.includes('webpack.hot-update')) {
     return;
   }
 
@@ -61,17 +64,33 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Clone the response before using it
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          // Only cache successful responses
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            }).catch(err => console.log('Cache put failed:', err));
+          }
           
           return response;
         })
-        .catch(() => {
-          return caches.match(event.request);
+        .catch((error) => {
+          console.log('Network failed, trying cache:', error);
+          return caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Return a minimal error response instead of undefined
+            return new Response(
+              JSON.stringify({ error: 'Network unavailable' }),
+              { 
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+          });
         })
     );
     return;
@@ -80,9 +99,9 @@ self.addEventListener('fetch', (event) => {
   // Cache first strategy for static assets
   event.respondWith(
     caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
 
         return fetch(event.request).then((response) => {
@@ -95,16 +114,39 @@ self.addEventListener('fetch', (event) => {
 
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
-          });
+          }).catch(err => console.log('Cache put failed:', err));
 
           return response;
         });
       })
-      .catch(() => {
-        // If both cache and network fail, show offline page
+      .catch((error) => {
+        console.log('Both cache and network failed:', error);
+        // If both cache and network fail, show offline page for document requests
         if (event.request.destination === 'document') {
-          return caches.match('/offline');
+          return caches.match('/offline').then(offlineResponse => {
+            if (offlineResponse) {
+              return offlineResponse;
+            }
+            // Fallback response if offline page not cached
+            return new Response(
+              '<html><body><h1>Offline</h1><p>Please check your connection.</p></body></html>',
+              { 
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/html' }
+              }
+            );
+          });
         }
+        
+        // For other requests, return a minimal error response
+        return new Response(
+          'Resource not available offline',
+          { 
+            status: 503,
+            statusText: 'Service Unavailable'
+          }
+        );
       })
   );
 });
@@ -125,8 +167,11 @@ async function syncAppointments() {
       if (request.url.includes('/api/appointments') && request.method === 'POST') {
         try {
           const response = await fetch(request.clone());
-          if (response.ok) {
+          if (response && response.ok) {
             await cache.delete(request);
+            console.log('Successfully synced appointment');
+          } else {
+            console.log('Sync response not ok:', response ? response.status : 'no response');
           }
         } catch (error) {
           console.error('Failed to sync appointment:', error);
@@ -193,23 +238,37 @@ self.addEventListener('periodicsync', (event) => {
 async function checkUpcomingAppointments() {
   try {
     const response = await fetch('/api/appointments/upcoming');
+    if (!response || !response.ok) {
+      console.log('Unable to fetch upcoming appointments:', response ? response.status : 'no response');
+      return;
+    }
+    
     const appointments = await response.json();
+    
+    if (!Array.isArray(appointments)) {
+      console.log('Invalid appointments data received');
+      return;
+    }
     
     // Check for appointments in the next hour
     const now = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
     
     appointments.forEach((appointment) => {
-      const appointmentTime = new Date(appointment.dateTime);
-      
-      if (appointmentTime >= now && appointmentTime <= oneHourFromNow) {
-        self.registration.showNotification('Appointment Reminder', {
-          body: `You have an appointment with Dr. ${appointment.doctorName} at ${appointmentTime.toLocaleTimeString()}`,
-          icon: '/logo.png',
-          badge: '/logo.png',
-          tag: `appointment-${appointment.id}`,
-          requireInteraction: true
-        });
+      try {
+        const appointmentTime = new Date(appointment.dateTime || appointment.appointmentDate);
+        
+        if (appointmentTime >= now && appointmentTime <= oneHourFromNow) {
+          self.registration.showNotification('Appointment Reminder', {
+            body: `You have an appointment with Dr. ${appointment.doctorName || 'Unknown'} at ${appointmentTime.toLocaleTimeString()}`,
+            icon: '/logo.png',
+            badge: '/logo.png',
+            tag: `appointment-${appointment.id}`,
+            requireInteraction: true
+          });
+        }
+      } catch (appointmentError) {
+        console.error('Error processing appointment:', appointmentError);
       }
     });
   } catch (error) {

@@ -20,28 +20,29 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('week')
 
-  // Calculate statistics with defensive programming - moved above useEffect
-  const appointmentsArray = Array.isArray(appointments) ? appointments : []
-
   useEffect(() => {
-    // Only fetch if appointments array is empty to prevent duplicate calls
-    if (appointmentsArray.length === 0) {
-      const loadData = async () => {
-        setLoading(true)
-        try {
-          console.log('Fetching appointments...')
-          const result = await dispatch(fetchAppointments({}))
-          console.log('Fetch result:', result)
-        } catch (error) {
-          console.error('Error fetching appointments:', error)
-        }
-        setLoading(false)
+    const loadData = async () => {
+      setLoading(true)
+      try {
+        console.log('Fetching appointments...')
+        const result = await dispatch(fetchAppointments({}))
+        console.log('Fetch result:', result)
+      } catch (error) {
+        console.error('Error fetching appointments:', error)
       }
+      setLoading(false)
+    }
+
+    // Only fetch if we don't have appointments loaded yet
+    if (!appointments || !Array.isArray(appointments) || appointments.length === 0) {
       loadData()
     } else {
       setLoading(false)
     }
-  }, [dispatch, appointmentsArray.length])
+  }, [dispatch]) // Removed appointmentsArray.length from dependencies
+
+  // Calculate statistics with defensive programming
+  const appointmentsArray = Array.isArray(appointments) ? appointments : []
   
   const todayAppointments = appointmentsArray.filter(apt => {
     const today = new Date().toISOString().split('T')[0]
