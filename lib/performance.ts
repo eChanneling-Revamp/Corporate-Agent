@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+// Global Node.js environment check
+declare const process: any
+
 // Redis type definition (optional dependency)
 interface Redis {
   get(key: string): Promise<string | null>
@@ -15,7 +18,7 @@ class PerformanceOptimizer {
   
   // Initialize Redis connection if available
   static async initializeRedis() {
-    if (process.env.REDIS_URL && !this.redis) {
+    if (typeof process !== 'undefined' && process.env.REDIS_URL && !this.redis) {
       try {
         // Redis is not installed, using memory cache only
         console.log('Redis not configured, using memory cache only')
@@ -84,7 +87,8 @@ class PerformanceOptimizer {
       }
 
       // Clear from memory cache
-      for (const key of this.cache.keys()) {
+      const cacheKeys = Array.from(this.cache.keys())
+      for (const key of cacheKeys) {
         if (key.includes(pattern.replace('*', ''))) {
           this.cache.delete(key)
         }
@@ -129,7 +133,8 @@ class PerformanceOptimizer {
 
     if (typeof include === 'object' && include !== null) {
       const result: any = {}
-      for (const [key, value] of Object.entries(include)) {
+      const includeEntries = Object.keys(include).map(key => [key, (include as any)[key]])
+      for (const [key, value] of includeEntries) {
         if (typeof value === 'object' && value !== null && 'include' in value) {
           result[key] = {
             ...value,
@@ -180,7 +185,7 @@ class PerformanceOptimizer {
         evict: 1000
       },
       // Query optimization
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      logging: (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') ? console.log : false,
       benchmark: true,
       // Retry configuration
       retry: {
@@ -268,7 +273,7 @@ export function withCache(
 ) {
   return async () => {
     // Skip cache if requested or in development
-    if (options.skipCache || process.env.NODE_ENV === 'development') {
+    if (options.skipCache || (typeof process !== 'undefined' && process.env.NODE_ENV === 'development')) {
       return await queryFn()
     }
 
@@ -365,7 +370,8 @@ export class PerformanceMonitor {
 
   static getAllMetrics(): Record<string, any> {
     const result: Record<string, any> = {}
-    for (const [key, values] of this.metrics) {
+    const metricsEntries = Array.from(this.metrics.entries())
+    for (const [key, values] of metricsEntries) {
       result[key] = this.getMetrics(key)
     }
     return result
@@ -384,8 +390,8 @@ export class MemoryOptimizer {
       processChunkFn(chunk)
       
       // Force garbage collection hint (if available)
-      if (global.gc) {
-        global.gc()
+      if (typeof globalThis !== 'undefined' && (globalThis as any).gc) {
+        (globalThis as any).gc()
       }
     }
   }
