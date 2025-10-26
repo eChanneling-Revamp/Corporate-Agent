@@ -67,8 +67,8 @@ async function getCorporatePackages(req: NextApiRequest, res: NextApiResponse) {
             select: {
               id: true,
               name: true,
-              contactEmail: true,
-              contactPhone: true
+              email: true,
+              contactNumber: true
             }
           },
           packageBenefits: true,
@@ -194,8 +194,8 @@ async function createCorporatePackage(req: NextApiRequest, res: NextApiResponse)
           select: {
             id: true,
             name: true,
-            contactEmail: true,
-            contactPhone: true
+            email: true,
+            contactNumber: true
           }
         },
         packageBenefits: true
@@ -278,8 +278,8 @@ async function updateCorporatePackage(req: NextApiRequest, res: NextApiResponse)
           select: {
             id: true,
             name: true,
-            contactEmail: true,
-            contactPhone: true
+            email: true,
+            contactNumber: true
           }
         },
         packageBenefits: true

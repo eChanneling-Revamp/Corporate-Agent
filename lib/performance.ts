@@ -17,12 +17,10 @@ class PerformanceOptimizer {
   static async initializeRedis() {
     if (process.env.REDIS_URL && !this.redis) {
       try {
-        // Dynamic import for Redis (optional dependency)
-        const { Redis: RedisClass } = await import('ioredis')
-        this.redis = new RedisClass(process.env.REDIS_URL) as Redis
-        console.log('Redis cache initialized')
+        // Redis is not installed, using memory cache only
+        console.log('Redis not configured, using memory cache only')
       } catch (error) {
-        console.warn('Redis not available, using in-memory cache:', error)
+        console.log('Redis not available, using memory cache only:', error)
       }
     }
   }

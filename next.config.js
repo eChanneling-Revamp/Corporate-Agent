@@ -2,20 +2,35 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
   images: {
-    domains: [
-      'images.unsplash.com', 
-      'localhost', 
-      'corporate-agent-frontend.vercel.app',
-      'api.echanneling.com',
-      'cdn.echanneling.com'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'corporate-agent-frontend.vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.echanneling.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.echanneling.com',
+      }
     ],
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.VERCEL_ENV === 'production',
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.VERCEL_ENV === 'production',
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
   },
   async redirects() {
     return [

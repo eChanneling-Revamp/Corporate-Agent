@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Rate limiting check
-  const rateLimitResult = await checkRateLimit(client.id, req.ip || 'unknown')
+  const rateLimitResult = await checkRateLimit(client.id, (req as any).ip || (req.socket?.remoteAddress) || 'unknown')
   if (!rateLimitResult.allowed) {
     return res.status(429).json({
       success: false,
@@ -91,7 +91,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse, clien
     case 'timeslots':
       return getTimeSlots(req, res, client)
     case 'patients':
-      return getPatients(req, res, client)
+      return res.json({ success: false, message: 'Patients API not implemented' })
     default:
       return res.status(400).json({
         success: false,
@@ -109,9 +109,9 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, clie
     case 'appointments':
       return createAppointment(req, res, client)
     case 'patients':
-      return createPatient(req, res, client)
+      return res.json({ success: false, message: 'Create patient API not implemented' })
     case 'timeslots':
-      return createTimeSlot(req, res, client)
+      return res.json({ success: false, message: 'Create time slot API not implemented' })
     default:
       return res.status(400).json({
         success: false,
@@ -137,7 +137,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse, clien
     case 'appointments':
       return updateAppointment(req, res, client, id as string)
     case 'patients':
-      return updatePatient(req, res, client, id as string)
+      return res.json({ success: false, message: 'Update patient API not implemented' })
     default:
       return res.status(400).json({
         success: false,

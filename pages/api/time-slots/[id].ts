@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
-
-const prisma = new PrismaClient()
+import { prisma } from '../../../lib/prisma'
 
 // Validation schemas
 const timeSlotUpdateSchema = z.object({
@@ -223,7 +221,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
     if (error instanceof z.ZodError) {
       res.status(400).json({
         error: 'Validation error',
-        details: error.errors
+        details: error.issues
       })
     } else {
       throw error

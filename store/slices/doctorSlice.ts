@@ -45,7 +45,7 @@ const initialState: DoctorState = {
 // Async thunks
 export const fetchDoctors = createAsyncThunk(
   'doctors/fetchDoctors',
-  async (filters?: any, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/doctors', { params: filters })
       return response.data

@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { email, password, name, companyName, contactNumber } = validatedData
 
     // Check if user already exists
-    const existingUser = await prisma.agent.findFirst({
+    const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
           { email: email.toLowerCase() },
@@ -35,18 +35,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const registrationNumber = `CA${Date.now()}${Math.floor(Math.random() * 1000)}`
 
     // Create user
-    const user = await prisma.agent.create({
+    const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
         password: hashedPassword,
         name,
         companyName,
         contactNumber,
-        registrationNumber,
         role: 'AGENT',
-        status: 'ACTIVE',
-        registrationStatus: 'APPROVED', // Auto-approve for demo
-        joinedAt: new Date()
+        isActive: true,
+        isEmailVerified: false
       }
     })
 
@@ -58,9 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     // Log activity
-    await prisma.auditLog.create({
+    await prisma.activityLog.create({
       data: {
-        agentId: user.id,
+        userId: user.id,
         action: 'REGISTER',
         entityType: 'USER',
         entityId: user.id,
@@ -79,8 +77,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         role: user.role,
         companyName: user.companyName,
         contactNumber: user.contactNumber,
-        registrationNumber: user.registrationNumber,
-        status: user.status
+        isActive: user.isActive,
+        createdAt: user.createdAt
       }
     }, 'Registration successful'))
 

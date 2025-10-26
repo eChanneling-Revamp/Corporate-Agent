@@ -1,24 +1,9 @@
 import { lazyLoad, lazyLoadWithRetry } from '../utils/lazyLoader'
 
 // Dashboard Components - Load with retry for critical components
-export const LazyDashboard = lazyLoadWithRetry(
-  () => import('./dashboard/MainDashboard'),
-  { loading: 'spinner', loadingText: 'Loading dashboard...', retries: 3 }
-)
-
-export const LazyMetricsCard = lazyLoad(
-  () => import('./dashboard/MetricsCard'),
-  { loading: 'card' }
-)
-
 export const LazyAnalyticsChart = lazyLoad(
   () => import('./dashboard/AnalyticsChart'),
   { loading: 'card', ssr: false } // Charts should not SSR
-)
-
-export const LazyRecentActivity = lazyLoad(
-  () => import('./dashboard/RecentActivity'),
-  { loading: 'table' }
 )
 
 export const LazyTaskManagement = lazyLoad(
@@ -26,47 +11,20 @@ export const LazyTaskManagement = lazyLoad(
   { loading: 'card' }
 )
 
-// Appointment Components
-export const LazyAppointmentBooking = lazyLoad(
-  () => import('./booking/AppointmentBookingForm'),
-  { loading: 'spinner', loadingText: 'Loading booking form...' }
+export const LazyPerformanceDashboard = lazyLoad(
+  () => import('./dashboard/PerformanceDashboard'),
+  { loading: 'spinner', loadingText: 'Loading performance dashboard...' }
 )
 
-export const LazyDoctorCard = lazyLoad(
-  () => import('./doctor/DoctorCard'),
-  { loading: 'card' }
+// Form Components
+export const LazyCustomerForm = lazyLoad(
+  () => import('./form/CustomerForm'),
+  { loading: 'spinner', loadingText: 'Loading customer form...' }
 )
 
-export const LazyDoctorSearch = lazyLoad(
-  () => import('./doctor/DoctorSearch'),
-  { loading: 'spinner' }
-)
-
-export const LazyTimeSlotPicker = lazyLoad(
-  () => import('./booking/TimeSlotPicker'),
-  { loading: 'card' }
-)
-
-// Report Components
-export const LazyReportGenerator = lazyLoad(
-  () => import('./reports/ReportGenerator'),
-  { loading: 'spinner', loadingText: 'Loading report generator...', ssr: false }
-)
-
-export const LazyReportViewer = lazyLoad(
-  () => import('./reports/ReportViewer'),
-  { loading: 'spinner', ssr: false }
-)
-
-// Auth Components
-export const LazyLoginForm = lazyLoadWithRetry(
-  () => import('./auth/EnhancedLogin'),
-  { loading: 'spinner', retries: 5 } // Critical component
-)
-
-export const LazyRegisterForm = lazyLoad(
-  () => import('./auth/RegisterForm'),
-  { loading: 'spinner' }
+export const LazySupportTicketForm = lazyLoad(
+  () => import('./form/SupportTicketForm'),
+  { loading: 'spinner', loadingText: 'Loading support ticket form...' }
 )
 
 // Layout Components
@@ -80,110 +38,46 @@ export const LazyHeader = lazyLoad(
   { loading: 'none', ssr: true }
 )
 
-export const LazyFooter = lazyLoad(
-  () => import('./layout/Footer'),
+export const LazyDashboardLayout = lazyLoad(
+  () => import('./layout/DashboardLayout'),
   { loading: 'none', ssr: true }
 )
 
-// Heavy Components - Load only when needed
-export const LazyDataTable = lazyLoad(
-  () => import('./common/DataTable'),
+// Common Components
+export const LazyLoadingSpinner = lazyLoad(
+  () => import('./common/LoadingSpinner'),
   { 
-    loading: 'table',
-    ssr: false,
-    loadingDelay: 500 // Wait before showing loader
+    loading: 'none',
+    ssr: false
   }
-)
-
-export const LazyRichTextEditor = lazyLoad(
-  () => import('./common/RichTextEditor'),
-  { 
-    loading: 'spinner',
-    loadingText: 'Loading editor...',
-    ssr: false 
-  }
-)
-
-export const LazyCalendar = lazyLoad(
-  () => import('./common/Calendar'),
-  { 
-    loading: 'card',
-    ssr: false 
-  }
-)
-
-export const LazyVideoPlayer = lazyLoad(
-  () => import('./common/VideoPlayer'),
-  { 
-    loading: 'spinner',
-    ssr: false,
-    suspense: true 
-  }
-)
-
-// Modal Components - Load on demand
-export const LazyConfirmationModal = lazyLoad(
-  () => import('./modals/ConfirmationModal'),
-  { loading: 'none' }
-)
-
-export const LazyImageGalleryModal = lazyLoad(
-  () => import('./modals/ImageGalleryModal'),
-  { loading: 'spinner', ssr: false }
-)
-
-export const LazyPaymentModal = lazyLoadWithRetry(
-  () => import('./modals/PaymentModal'),
-  { loading: 'spinner', retries: 3 }
 )
 
 // Export all lazy components as a registry
 export const LazyComponents = {
   // Dashboard
-  Dashboard: LazyDashboard,
-  MetricsCard: LazyMetricsCard,
   AnalyticsChart: LazyAnalyticsChart,
-  RecentActivity: LazyRecentActivity,
   TaskManagement: LazyTaskManagement,
+  PerformanceDashboard: LazyPerformanceDashboard,
   
-  // Appointments
-  AppointmentBooking: LazyAppointmentBooking,
-  DoctorCard: LazyDoctorCard,
-  DoctorSearch: LazyDoctorSearch,
-  TimeSlotPicker: LazyTimeSlotPicker,
-  
-  // Reports
-  ReportGenerator: LazyReportGenerator,
-  ReportViewer: LazyReportViewer,
-  
-  // Auth
-  LoginForm: LazyLoginForm,
-  RegisterForm: LazyRegisterForm,
+  // Forms
+  CustomerForm: LazyCustomerForm,
+  SupportTicketForm: LazySupportTicketForm,
   
   // Layout
   Sidebar: LazySidebar,
   Header: LazyHeader,
-  Footer: LazyFooter,
+  DashboardLayout: LazyDashboardLayout,
   
   // Common
-  DataTable: LazyDataTable,
-  RichTextEditor: LazyRichTextEditor,
-  Calendar: LazyCalendar,
-  VideoPlayer: LazyVideoPlayer,
-  
-  // Modals
-  ConfirmationModal: LazyConfirmationModal,
-  ImageGalleryModal: LazyImageGalleryModal,
-  PaymentModal: LazyPaymentModal
+  LoadingSpinner: LazyLoadingSpinner
 }
 
 // Preload critical components
 export const preloadCriticalComponents = async () => {
   const critical = [
-    () => import('./dashboard/MainDashboard'),
-    () => import('./auth/EnhancedLogin'),
     () => import('./layout/Header'),
-    () => import('./layout/Sidebar')
+    () => import('./layout/Sidebar'),
+    () => import('./dashboard/PerformanceDashboard')
   ]
   
   await Promise.all(critical.map(fn => fn().catch(console.error)))
@@ -193,18 +87,16 @@ export const preloadCriticalComponents = async () => {
 export const preloadRouteComponents = async (route: string) => {
   const routeComponents: Record<string, Array<() => Promise<any>>> = {
     '/dashboard': [
-      () => import('./dashboard/MainDashboard'),
-      () => import('./dashboard/MetricsCard'),
+      () => import('./dashboard/PerformanceDashboard'),
       () => import('./dashboard/AnalyticsChart')
     ],
-    '/appointments': [
-      () => import('./booking/AppointmentBookingForm'),
-      () => import('./doctor/DoctorSearch'),
-      () => import('./booking/TimeSlotPicker')
+    '/customers': [
+      () => import('./form/CustomerForm'),
+      () => import('./common/LoadingSpinner')
     ],
-    '/reports': [
-      () => import('./reports/ReportGenerator'),
-      () => import('./reports/ReportViewer')
+    '/support-tickets': [
+      () => import('./form/SupportTicketForm'),
+      () => import('./common/LoadingSpinner')
     ]
   }
   

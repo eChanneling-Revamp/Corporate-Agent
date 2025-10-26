@@ -1,20 +1,22 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm run build || true",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_API_BASE_URL": "/api",
-    "NEXT_PUBLIC_APP_URL": "https://corporate-agent-frontend.vercel.app",
-    "IGNORE_BUILD_ERRORS": "true",
-    "IGNORE_LINT_ERRORS": "true"
+    "NEXT_PUBLIC_APP_URL": "https://corporate-agent-frontend.vercel.app"
   },
   "build": {
     "env": {
       "NEXT_PUBLIC_API_BASE_URL": "/api",
       "NEXT_PUBLIC_APP_URL": "https://corporate-agent-frontend.vercel.app",
-      "NEXT_PUBLIC_SOCKET_URL": "wss://corporate-agent-frontend.vercel.app",
-      "IGNORE_BUILD_ERRORS": "true",
-      "IGNORE_LINT_ERRORS": "true"
+      "NEXT_PUBLIC_SOCKET_URL": "wss://corporate-agent-frontend.vercel.app"
+    }
+  },
+  "functions": {
+    "pages/api/**/*.ts": {
+      "runtime": "nodejs18.x"
     }
   }
 }

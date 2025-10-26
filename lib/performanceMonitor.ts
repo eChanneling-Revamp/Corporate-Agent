@@ -306,11 +306,11 @@ export function withPerformanceTracking(
           statusCode: res.statusCode,
           requestId,
           userAgent: req.headers['user-agent'],
-          contentLength: res.get('content-length')
+          contentLength: res.getHeader('content-length')
         },
         userId: (req as any).user?.id,
         userAgent: req.headers['user-agent'] as string,
-        ip: req.ip || req.connection.remoteAddress
+        ip: (req as any).ip || (req.socket?.remoteAddress) || 'unknown'
       })
 
       return result
@@ -330,7 +330,7 @@ export function withPerformanceTracking(
         },
         userId: (req as any).user?.id,
         userAgent: req.headers['user-agent'] as string,
-        ip: req.ip || req.connection.remoteAddress
+        ip: (req as any).ip || (req.socket?.remoteAddress) || 'unknown'
       })
 
       throw error
@@ -351,7 +351,7 @@ export function usePerformanceMonitoring() {
 
   const measurePageLoad = () => {
     if (typeof window !== 'undefined' && 'performance' in window) {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+      const navigation = performance.getEntriesByType('navigation' as any)[0] as PerformanceNavigationTiming
       
       recordClientMetric({
         type: 'render',

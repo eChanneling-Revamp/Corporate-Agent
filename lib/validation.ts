@@ -33,6 +33,7 @@ export const hospitalSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   address: z.string().min(5, 'Address must be at least 5 characters'),
   city: z.string().min(2, 'City required'),
+  district: z.string().min(2, 'District required'),
   contactNumber: z.string().regex(/^\+?[\d\s-()]+$/, 'Invalid phone number format'),
   email: z.string().email('Invalid email format'),
   facilities: z.array(z.string()).min(1, 'At least one facility required')
@@ -73,7 +74,7 @@ export const validateRequest = (schema: z.ZodSchema) => {
         return res.status(400).json({
           success: false,
           message: 'Validation failed',
-          errors: error.errors.map(err => ({
+          errors: error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message
           }))

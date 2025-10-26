@@ -37,11 +37,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
             lastLoginAt: true,
             createdAt: true,
             updatedAt: true,
-            _count: {
-              appointments: true,
-              tasks: true,
-              notifications: true
-            }
+            // _count fields not available for User model
           }
         })
 

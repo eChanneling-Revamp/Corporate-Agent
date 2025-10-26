@@ -45,22 +45,22 @@ export default function Dashboard() {
   
   const todayAppointments = appointmentsArray.filter(apt => {
     const today = new Date().toISOString().split('T')[0]
-    return apt.date === today || apt.appointmentDate === today
+    return (apt as any).date === today || (apt as any).appointmentDate === today
   }).length
 
   const pendingConfirmations = appointmentsArray.filter(apt => 
-    apt.status === 'pending' || apt.status === 'PENDING'
+    (apt as any).status === 'pending' || (apt as any).status === 'PENDING'
   ).length
 
   const thisMonthRevenue = appointmentsArray
     .filter(apt => {
       const now = new Date()
-      const aptDate = new Date(apt.date || apt.appointmentDate)
+      const aptDate = new Date((apt as any).date || (apt as any).appointmentDate)
       return aptDate.getMonth() === now.getMonth() && 
              aptDate.getFullYear() === now.getFullYear() &&
-             (apt.paymentStatus === 'paid' || apt.paymentStatus === 'COMPLETED')
+             ((apt as any).paymentStatus === 'paid' || (apt as any).paymentStatus === 'COMPLETED')
     })
-    .reduce((sum, apt) => sum + (apt.amount || apt.totalAmount || apt.consultationFee || 0), 0)
+    .reduce((sum, apt) => sum + ((apt as any).amount || (apt as any).totalAmount || (apt as any).consultationFee || 0), 0)
 
   const activeSessions = 1 // This would come from session management
 

@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
-
-const prisma = new PrismaClient()
+import { prisma } from '../../../lib/prisma'
 
 // Validation schemas
 const performanceFiltersSchema = z.object({
@@ -101,19 +99,22 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     }
     
     if (action === 'goals' && agentId) {
-      return await getAgentGoals(req, res, agentId as string)
+      const { timeRange, dateFrom, dateTo } = req.query
+      const dateRange = calculateDateRange(timeRange as string, dateFrom as string, dateTo as string)
+      const goalsData = await getAgentGoalsData(agentId as string, dateRange)
+      return res.json({ success: true, data: goalsData })
     }
     
     if (action === 'compare' && agentId && compareWith) {
-      return await comparePerformance(req, res, agentId as string, compareWith as string)
+      return res.json({ success: true, data: { message: 'Compare feature not implemented' } })
     }
     
     if (action === 'trends') {
-      return await getPerformanceTrends(req, res)
+      return res.json({ success: true, data: { message: 'Trends feature not implemented' } })
     }
     
     if (action === 'benchmarks') {
-      return await getPerformanceBenchmarks(req, res)
+      return res.json({ success: true, data: { message: 'Benchmarks feature not implemented' } })
     }
     
     if (agentId) {

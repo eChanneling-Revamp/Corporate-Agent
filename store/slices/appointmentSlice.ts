@@ -61,7 +61,7 @@ const initialState: AppointmentState = {
 // Async thunks
 export const fetchAppointments = createAsyncThunk(
   'appointments/fetchAppointments',
-  async (filters?: any, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/appointments', { params: filters })
       // Return the actual data from the API response

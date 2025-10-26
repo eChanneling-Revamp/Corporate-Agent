@@ -11,7 +11,7 @@ export interface SocketWithUser extends SocketIOServer {
 
 // Extend NextApiResponse to include socket
 export interface NextApiResponseWithSocket extends NextApiResponse {
-  socket: {
+  socket: NextApiResponse['socket'] & {
     server: HTTPServer & {
       io?: SocketIOServer
     }

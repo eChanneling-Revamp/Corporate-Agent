@@ -113,7 +113,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(({
           step={step}
           pattern={pattern}
           autoFocus={autoFocus}
-          aria-invalid={hasError}
+          aria-invalid={!!hasError}
           aria-describedby={hasError ? `${name}-error` : helpText ? `${name}-help` : undefined}
           className={`
             block w-full rounded-lg border transition-all duration-200
@@ -246,7 +246,7 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
           placeholder={placeholder}
           rows={autoResize ? 1 : rows}
           maxLength={maxLength}
-          aria-invalid={hasError}
+          aria-invalid={!!hasError}
           aria-describedby={hasError ? `${name}-error` : helpText ? `${name}-help` : undefined}
           className={`
             block w-full rounded-lg border transition-all duration-200
@@ -349,7 +349,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(({
           disabled={disabled}
           required={required}
           multiple={multiple}
-          aria-invalid={hasError}
+          aria-invalid={!!hasError}
           aria-describedby={hasError ? `${name}-error` : helpText ? `${name}-help` : undefined}
           className={`
             block w-full rounded-lg border transition-all duration-200
@@ -452,7 +452,7 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
             onBlur={onBlur}
             disabled={disabled}
             required={required}
-            aria-invalid={hasError}
+            aria-invalid={!!hasError}
             aria-describedby={hasError ? `${name}-error` : helpText ? `${name}-help` : undefined}
             className={`
               h-4 w-4 rounded border transition-all duration-200
@@ -544,7 +544,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           ${className}
         `}
         role="radiogroup"
-        aria-invalid={hasError}
+        aria-invalid={!!hasError}
         aria-describedby={hasError ? `${name}-error` : helpText ? `${name}-help` : undefined}
       >
         {options.map((option) => (

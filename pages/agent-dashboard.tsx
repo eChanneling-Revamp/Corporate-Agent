@@ -157,7 +157,7 @@ const AgentDashboard: React.FC = () => {
       bgColor: 'bg-blue-50',
       trend: 'up' as const,
       subtitle: 'Scheduled today',
-      onClick: () => toast.info('Opening appointments view...')
+      onClick: () => toast('Opening appointments view...')
     },
     {
       title: 'Tasks Completed',
@@ -179,7 +179,7 @@ const AgentDashboard: React.FC = () => {
       bgColor: 'bg-yellow-50',
       trend: 'up' as const,
       subtitle: 'Last 30 days',
-      onClick: () => toast.info('Opening feedback details...')
+      onClick: () => toast('Opening feedback details...')
     },
     {
       title: 'Response Time',
@@ -190,7 +190,7 @@ const AgentDashboard: React.FC = () => {
       bgColor: 'bg-purple-50',
       trend: 'down' as const,
       subtitle: 'Average today',
-      onClick: () => toast.info('Opening response metrics...')
+      onClick: () => toast('Opening response metrics...')
     }
   ]
 

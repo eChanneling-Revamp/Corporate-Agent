@@ -11,33 +11,17 @@
     "analyze": "cross-env ANALYZE=true next build",
     "analyze:server": "cross-env BUNDLE_ANALYZE=server next build",
     "analyze:browser": "cross-env BUNDLE_ANALYZE=browser next build",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "cypress:run:chrome": "cypress run --browser chrome",
-    "cypress:run:firefox": "cypress run --browser firefox",
-    "cypress:run:edge": "cypress run --browser edge",
-    "cypress:run:mobile": "cypress run --config viewportWidth=375,viewportHeight=667",
-    "cypress:run:tablet": "cypress run --config viewportWidth=768,viewportHeight=1024",
-    "test:e2e": "start-server-and-test dev http://localhost:3000 cypress:run",
-    "test:e2e:headless": "start-server-and-test dev http://localhost:3000 'cypress run --headless'",
-    "test:auth": "cypress run --spec 'cypress/e2e/01-auth-flow.cy.ts'",
-    "test:booking": "cypress run --spec 'cypress/e2e/02-booking-flow.cy.ts'",
-    "test:payment": "cypress run --spec 'cypress/e2e/03-payment-flow.cy.ts'",
-    "test:realtime": "cypress run --spec 'cypress/e2e/04-realtime-features.cy.ts'",
-    "test:mobile": "cypress run --spec 'cypress/e2e/05-mobile-pwa.cy.ts'",
-    "test:all": "npm run test:auth && npm run test:booking && npm run test:payment && npm run test:realtime && npm run test:mobile",
-    "cypress:coverage": "nyc cypress run",
-    "cypress:report": "nyc report --reporter=html",
     "db:seed": "npx prisma db seed",
     "db:studio": "npx prisma studio",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
-    "pwa:icons": "node scripts/generatePWAIcons.js"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.18.0",
     "@reduxjs/toolkit": "^2.0.1",
     "@types/multer": "^2.0.0",
@@ -70,9 +54,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@cypress/code-coverage": "^3.14.7",
     "@next/bundle-analyzer": "^14.0.0",
-    "@testing-library/cypress": "^10.1.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.5",
@@ -82,14 +64,10 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "autoprefixer": "latest",
-    "cypress": "^15.5.0",
-    "cypress-real-events": "^1.15.0",
     "eslint": "^8.50.0",
     "eslint-config-next": "^14.0.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "nyc": "^17.1.0",
     "postcss": "latest",
-    "start-server-and-test": "^2.1.2",
     "tailwindcss": "3.4.17",
     "typescript": "^5.5.4"
   }

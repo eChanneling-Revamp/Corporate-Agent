@@ -472,17 +472,16 @@ async function scheduleReport(req: NextApiRequest, res: NextApiResponse) {
         title,
         type: reportType as any,
         description,
-        parameters: parameters || {},
-        status: 'PENDING' as any,
-        generatedById: scheduledBy,
-        scheduledAt: new Date(),
-        // Add schedule and recipient details to parameters
-        extraData: {
+        parameters: {
+          ...(parameters || {}),
           schedule,
           recipients,
           format,
           autoGenerate: true
-        }
+        },
+        status: 'PENDING' as any,
+        generatedById: scheduledBy,
+        scheduledAt: new Date()
       }
     })
 
@@ -693,7 +692,7 @@ async function getBookingPatterns(startDate: Date, endDate: Date) {
   }, {} as Record<number, number>)
 
   const peakHour = Object.entries(hourlyBookings)
-    .sort(([,a], [,b]) => b - a)[0]
+    .sort(([,a], [,b]) => (b as number) - (a as number))[0]
 
   return {
     hourlyDistribution: hourlyBookings,

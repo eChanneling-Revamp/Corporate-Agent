@@ -67,8 +67,8 @@ export default function SupportTicketForm({
     setValue,
     watch,
     reset
-  } = useForm<SupportTicketCreateData | SupportTicketUpdateData>({
-    resolver: zodResolver(schema),
+  } = useForm({
+    resolver: zodResolver(supportTicketCreateSchema),
     defaultValues: ticket ? {
       ...ticket,
       // Ensure required fields have defaults for create mode

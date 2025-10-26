@@ -59,7 +59,7 @@ interface Customer {
   preferredLanguage?: string
   communicationMethod?: 'EMAIL' | 'SMS' | 'PHONE' | 'WHATSAPP'
   appointmentReminders?: boolean
-  marketingConsent?: boolean
+
   
   // Agent Assignment
   assignedAgentId?: string
@@ -90,8 +90,8 @@ export default function CustomerForm({
     setValue,
     watch,
     reset
-  } = useForm<CustomerCreateData | CustomerUpdateData>({
-    resolver: zodResolver(schema),
+  } = useForm({
+    resolver: zodResolver(customerCreateSchema),
     defaultValues: customer ? {
       ...customer,
       // Ensure required fields have defaults
@@ -102,8 +102,7 @@ export default function CustomerForm({
       country: customer.country || '',
       preferredLanguage: customer.preferredLanguage || 'English',
       communicationMethod: customer.communicationMethod || 'EMAIL',
-      appointmentReminders: customer.appointmentReminders || false,
-      marketingConsent: customer.marketingConsent || false
+      appointmentReminders: customer.appointmentReminders || false
     } : {
       firstName: '',
       lastName: '',
@@ -113,7 +112,7 @@ export default function CustomerForm({
       preferredLanguage: 'English',
       communicationMethod: 'EMAIL' as const,
       appointmentReminders: false,
-      marketingConsent: false
+      newsletterSubscription: false
     }
   })
 
@@ -602,16 +601,7 @@ export default function CustomerForm({
                   </label>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <input
-                    {...register('marketingConsent')}
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="marketingConsent" className="text-sm font-medium text-gray-700">
-                    Consent to marketing communications
-                  </label>
-                </div>
+
 
                 <div className="md:col-span-2">
                   <label htmlFor="assignedAgentId" className="block text-sm font-medium text-gray-700">

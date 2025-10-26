@@ -27,7 +27,7 @@ interface Doctor {
 const DoctorSearch = () => {
   const dispatch = useDispatch<any>();
   const router = useRouter();
-  const { doctors, loading } = useSelector((state: RootState) => state.doctors);
+  const { doctors, loading } = useSelector((state: RootState) => state.doctors) as any;
   const [showFilters, setShowFilters] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');

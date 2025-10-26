@@ -53,13 +53,19 @@ export function useZodForm<T extends Record<string, any>>({
   // Validate single field
   const validateField = useCallback((name: keyof T, value: any): string | undefined => {
     try {
-      const fieldSchema = schema.shape?.[name as string] || schema
-      fieldSchema.parse(value)
+      // Create a partial object with just this field to validate
+      const partialData = { [name]: value } as any
+      const result = schema.safeParse(partialData)
+      
+      if (!result.success) {
+        const fieldError = result.error.issues.find(issue => 
+          issue.path.includes(String(name))
+        )
+        return fieldError?.message || 'Validation error'
+      }
+      
       return undefined
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return error.errors[0]?.message
-      }
       return 'Validation error'
     }
   }, [schema])
@@ -72,7 +78,7 @@ export function useZodForm<T extends Record<string, any>>({
     } catch (error) {
       if (error instanceof z.ZodError) {
         const errors: Partial<Record<keyof T, string>> = {}
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           const path = err.path.join('.') as keyof T
           if (!errors[path]) {
             errors[path] = err.message
@@ -274,7 +280,7 @@ export function useZodForm<T extends Record<string, any>>({
     },
     onBlur: () => handleBlur(name),
     'aria-invalid': !!formState.errors[name],
-    'aria-describedby': formState.errors[name] ? `${name}-error` : undefined
+    'aria-describedby': formState.errors[name] ? `${String(name)}-error` : undefined
   }), [formState.values, formState.errors, handleChange, handleBlur])
 
   // Get field props (alternative to register)

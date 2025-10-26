@@ -198,13 +198,39 @@ async function createCustomer(req: NextApiRequest, res: NextApiResponse) {
     const customerCount = await prisma.customer.count()
     const customerNumber = `CUST-${new Date().getFullYear()}-${String(customerCount + 1).padStart(6, '0')}`
     
-    // Create customer
+    // Create customer without assignedAgentId first
+    const { assignedAgentId, ...customerData } = data
     const customer = await prisma.customer.create({
       data: {
-        ...data,
+        firstName: customerData.firstName,
+        lastName: customerData.lastName,
+        email: customerData.email,
+        phone: customerData.phone || '',
         customerNumber,
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
-        insuranceValidUntil: data.insuranceValidUntil ? new Date(data.insuranceValidUntil) : null
+        insuranceValidUntil: data.insuranceValidUntil ? new Date(data.insuranceValidUntil) : null,
+        gender: customerData.gender,
+        street: customerData.street,
+        city: customerData.city,
+        state: customerData.state,
+        zipCode: customerData.zipCode,
+        country: customerData.country || 'Sri Lanka',
+        emergencyContactName: customerData.emergencyContactName,
+        emergencyContactRelationship: customerData.emergencyContactRelationship,
+        emergencyContactPhone: customerData.emergencyContactPhone,
+        bloodType: customerData.bloodType,
+        allergies: customerData.allergies || [],
+        chronicConditions: customerData.chronicConditions || [],
+        currentMedications: customerData.currentMedications || [],
+        insuranceProvider: customerData.insuranceProvider,
+        insurancePolicyNumber: customerData.insurancePolicyNumber,
+        insuranceGroupNumber: customerData.insuranceGroupNumber,
+        preferredLanguage: customerData.preferredLanguage || 'English',
+        communicationMethod: customerData.communicationMethod || 'EMAIL',
+        appointmentReminders: customerData.appointmentReminders ?? true,
+        newsletterSubscription: customerData.newsletterSubscription ?? false,
+        tags: customerData.tags || [],
+        status: customerData.status || 'ACTIVE'
       },
       include: {
         assignedAgent: {

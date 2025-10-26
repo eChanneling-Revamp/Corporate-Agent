@@ -76,7 +76,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       prisma.appointment.count({ where: { ...baseFilter, status: 'CONFIRMED' } }),
       prisma.appointment.count({ where: { ...baseFilter, status: 'CANCELLED' } }),
       prisma.appointment.count({ where: { ...baseFilter, status: 'COMPLETED' } }),
-      prisma.appointment.count({ where: { ...baseFilter, status: 'PENDING' } }),
+      prisma.appointment.count({ where: { ...baseFilter, status: 'UNPAID' } }),
       
       // Top doctors
       prisma.appointment.groupBy({

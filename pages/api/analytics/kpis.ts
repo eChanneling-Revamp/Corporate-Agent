@@ -52,8 +52,8 @@ const kpiDefinitionSchema = z.object({
   frequency: z.enum(['REAL_TIME', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY']).optional().default('DAILY'),
   dataSource: z.object({
     tables: z.array(z.string()),
-    filters: z.record(z.any()).optional(),
-    aggregations: z.record(z.string()).optional()
+    filters: z.record(z.string(), z.any()).optional(),
+    aggregations: z.record(z.string(), z.string()).optional()
   }),
   visualization: z.object({
     chartType: z.enum(['NUMBER', 'GAUGE', 'LINE', 'BAR', 'DONUT']).optional().default('NUMBER'),
