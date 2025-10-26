@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: false, // Completely disable strict mode
   swcMinify: true,
-  output: 'standalone',
   
   // Additional development optimizations
   compiler: {

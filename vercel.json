@@ -13,10 +13,5 @@
       "NEXT_PUBLIC_APP_URL": "https://corporate-agent-frontend.vercel.app",
       "NEXT_PUBLIC_SOCKET_URL": "wss://corporate-agent-frontend.vercel.app"
     }
-  },
-  "functions": {
-    "pages/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
   }
 }
