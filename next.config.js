@@ -1,8 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, // Completely disable strict mode
   swcMinify: true,
   output: 'standalone',
+  
+  // Additional development optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error']
+    } : false,
+  },
+  
+  // Optimize development experience
+  ...(process.env.NODE_ENV === 'development' && {
+    onDemandEntries: {
+      // Keep pages in memory for 60 seconds instead of default 25 seconds
+      maxInactiveAge: 60 * 1000,
+      // Keep at most 5 pages in memory at a time
+      pagesBufferLength: 5,
+    }
+  }),
+  
   images: {
     remotePatterns: [
       {

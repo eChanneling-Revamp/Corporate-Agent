@@ -9,12 +9,18 @@ import ErrorBoundary from '../components/common/ErrorBoundary'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import { connectSocket } from '../lib/socketClient'
 import { setupGlobalErrorHandlers } from '../lib/errorHandler'
+import { setupDevelopmentFilters } from '../lib/devUtils'
 import PWAInstallPrompt from '../components/common/PWAInstallPrompt'
 import '../lib/devtools'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }: { Component: any, pageProps: any }) {
   useEffect(() => {
+    // Setup development filters to reduce console noise
+    if (process.env.NODE_ENV === 'development') {
+      setupDevelopmentFilters()
+    }
+    
     // Setup global error handlers
     setupGlobalErrorHandlers()
 

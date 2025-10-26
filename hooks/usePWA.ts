@@ -31,6 +31,12 @@ export const usePWA = () => {
   }, [])
 
   const registerServiceWorker = async () => {
+    // Skip service worker in development if disabled
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_SW === 'true') {
+      console.log('Service Worker disabled in development')
+      return
+    }
+    
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',

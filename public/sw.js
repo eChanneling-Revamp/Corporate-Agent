@@ -51,11 +51,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip cross-origin requests and chrome extension requests
+  // Skip cross-origin requests and development noise
   if (!event.request.url.startsWith(self.location.origin) || 
       event.request.url.includes('chrome-extension') ||
       event.request.url.includes('.well-known') ||
-      event.request.url.includes('webpack.hot-update')) {
+      event.request.url.includes('webpack.hot-update') ||
+      event.request.url.includes('_next/static/webpack') ||
+      event.request.url.includes('sockjs-node') ||
+      event.request.url.includes('__nextjs_original-stack-frame')) {
     return;
   }
 

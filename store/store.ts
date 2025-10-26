@@ -11,7 +11,8 @@ import reportSlice from './slices/reportSlice'
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'] // Only persist auth state
+  whitelist: ['auth'], // Only persist auth state
+  debug: false, // Disable redux-persist debug messages
 }
 
 const rootReducer = combineReducers({
