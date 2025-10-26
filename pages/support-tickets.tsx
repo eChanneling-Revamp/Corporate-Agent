@@ -17,15 +17,24 @@ import {
   Minus,
   Eye,
   Edit,
+  Trash2,
+  Download,
+  RefreshCw,
   MoreVertical,
   Send
 } from 'lucide-react'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import SupportTicketForm from '../components/form/SupportTicketForm'
 import toast from 'react-hot-toast'
 import { RootState } from '../store/store'
+import { 
+  SupportTicketCreateData, 
+  SupportTicketUpdateData, 
+  TicketMessageCreateData 
+} from '../lib/validationSchemas'
 
-interface Ticket {
+interface SupportTicket {
   id: string
   ticketNumber: string
   customerId: string
@@ -33,30 +42,44 @@ interface Ticket {
   customerEmail: string
   title: string
   description: string
-  category: 'technical' | 'billing' | 'appointment' | 'complaint' | 'general'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'open' | 'in-progress' | 'waiting-customer' | 'resolved' | 'closed'
-  assignedAgent: string
+  category: 'TECHNICAL' | 'BILLING' | 'APPOINTMENT' | 'COMPLAINT' | 'GENERAL' | 'EMERGENCY' | 'FEEDBACK'
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL'
+  status: 'OPEN' | 'IN_PROGRESS' | 'PENDING' | 'RESOLVED' | 'CLOSED'
+  assignedAgentId?: string
+  assignedAgentName?: string
+  tags: string[]
+  estimatedResolutionAt?: string
+  resolutionNotes?: string
+  satisfactionRating?: number
   createdAt: string
   updatedAt: string
   resolvedAt?: string
   closedAt?: string
-  tags: string[]
   messages: TicketMessage[]
-  estimatedResolution?: string
-  actualResolution?: string
-  satisfactionRating?: number
-  resolutionNotes?: string
 }
 
 interface TicketMessage {
   id: string
-  senderId: string
   senderName: string
-  senderType: 'customer' | 'agent' | 'system'
+  senderType: 'CUSTOMER' | 'AGENT' | 'SYSTEM' | 'ADMIN'
   message: string
-  timestamp: string
-  attachments?: string[]
+  createdAt: string
+  isInternal: boolean
+}
+
+interface Customer {
+  id: string
+  customerNumber: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+}
+
+interface Agent {
+  id: string
+  name: string
+  email: string
 }
 
 interface TicketFilters {
@@ -69,14 +92,16 @@ interface TicketFilters {
 
 export default function CustomerSupport() {
   const dispatch = useDispatch<any>()
-  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [tickets, setTickets] = useState<SupportTicket[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null)
   const [showTicketModal, setShowTicketModal] = useState(false)
-  const [showNewTicketModal, setShowNewTicketModal] = useState(false)
-  const [newMessage, setNewMessage] = useState('')
+  const [showTicketForm, setShowTicketForm] = useState(false)
+  const [isEditingTicket, setIsEditingTicket] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
 
@@ -88,164 +113,156 @@ export default function CustomerSupport() {
     dateRange: ''
   })
 
-  const [newTicket, setNewTicket] = useState({
-    customerId: '',
-    customerName: '',
-    customerEmail: '',
-    title: '',
-    description: '',
-    category: 'general',
-    priority: 'medium'
-  })
-
-  // Mock ticket data
-  useEffect(() => {
-    const mockTickets: Ticket[] = [
-      {
-        id: '1',
-        ticketNumber: 'TKT-2025-001',
-        customerId: '1',
-        customerName: 'John Doe',
-        customerEmail: 'john.doe@email.com',
-        title: 'Unable to book appointment online',
-        description: 'I am trying to book an appointment with Dr. Smith but the website keeps showing an error message when I try to submit the form.',
-        category: 'technical',
-        priority: 'high',
-        status: 'in-progress',
-        assignedAgent: 'Agent Sarah',
-        createdAt: '2025-10-18T09:00:00Z',
-        updatedAt: '2025-10-18T14:30:00Z',
-        tags: ['website', 'booking', 'error'],
-        estimatedResolution: '2025-10-19T17:00:00Z',
-        messages: [
-          {
-            id: '1',
-            senderId: '1',
-            senderName: 'John Doe',
-            senderType: 'customer',
-            message: 'I am trying to book an appointment with Dr. Smith but the website keeps showing an error message when I try to submit the form.',
-            timestamp: '2025-10-18T09:00:00Z'
-          },
-          {
-            id: '2',
-            senderId: 'agent1',
-            senderName: 'Agent Sarah',
-            senderType: 'agent',
-            message: 'Hi John, I understand your frustration. Let me investigate this issue for you. Can you please tell me which browser you are using and what exactly the error message says?',
-            timestamp: '2025-10-18T10:15:00Z'
-          },
-          {
-            id: '3',
-            senderId: '1',
-            senderName: 'John Doe',
-            senderType: 'customer',
-            message: 'I am using Chrome browser. The error message says "Payment processing failed. Please try again."',
-            timestamp: '2025-10-18T11:30:00Z'
-          },
-          {
-            id: '4',
-            senderId: 'agent1',
-            senderName: 'Agent Sarah',
-            senderType: 'agent',
-            message: 'Thank you for that information. I have identified the issue with our payment gateway. Our technical team is working on it. I will book your appointment manually for now. Can you please confirm your preferred date and time?',
-            timestamp: '2025-10-18T14:30:00Z'
-          }
-        ]
-      },
-      {
-        id: '2',
-        ticketNumber: 'TKT-2025-002',
-        customerId: '2',
-        customerName: 'Sarah Johnson',
-        customerEmail: 'sarah.johnson@email.com',
-        title: 'Billing inquiry for insurance claim',
-        description: 'I need clarification on my recent bill. My insurance should have covered the consultation fee but I was charged the full amount.',
-        category: 'billing',
-        priority: 'medium',
-        status: 'waiting-customer',
-        assignedAgent: 'Agent Mike',
-        createdAt: '2025-10-17T14:20:00Z',
-        updatedAt: '2025-10-18T16:45:00Z',
-        tags: ['insurance', 'billing', 'claim'],
-        estimatedResolution: '2025-10-20T12:00:00Z',
-        messages: [
-          {
-            id: '5',
-            senderId: '2',
-            senderName: 'Sarah Johnson',
-            senderType: 'customer',
-            message: 'I need clarification on my recent bill. My insurance should have covered the consultation fee but I was charged the full amount.',
-            timestamp: '2025-10-17T14:20:00Z'
-          },
-          {
-            id: '6',
-            senderId: 'agent2',
-            senderName: 'Agent Mike',
-            senderType: 'agent',
-            message: 'Hi Sarah, I have reviewed your account and can see the issue. Your insurance claim was submitted but there was a minor error in the policy number. I have resubmitted the claim with the correct information. You should receive a refund within 3-5 business days. Could you please confirm your current insurance policy number for our records?',
-            timestamp: '2025-10-18T16:45:00Z'
-          }
-        ]
-      },
-      {
-        id: '3',
-        ticketNumber: 'TKT-2025-003',
-        customerId: '3',
-        customerName: 'Michael Brown',
-        customerEmail: 'michael.brown@email.com',
-        title: 'Request to reschedule appointment',
-        description: 'I need to reschedule my appointment with Dr. Wilson from tomorrow to next week due to an emergency.',
-        category: 'appointment',
-        priority: 'medium',
-        status: 'resolved',
-        assignedAgent: 'Agent Lisa',
-        createdAt: '2025-10-16T11:00:00Z',
-        updatedAt: '2025-10-16T15:30:00Z',
-        resolvedAt: '2025-10-16T15:30:00Z',
-        tags: ['reschedule', 'emergency'],
-        satisfactionRating: 5,
-        resolutionNotes: 'Appointment successfully rescheduled to next Tuesday at 2:00 PM',
-        messages: [
-          {
-            id: '7',
-            senderId: '3',
-            senderName: 'Michael Brown',
-            senderType: 'customer',
-            message: 'I need to reschedule my appointment with Dr. Wilson from tomorrow to next week due to an emergency.',
-            timestamp: '2025-10-16T11:00:00Z'
-          },
-          {
-            id: '8',
-            senderId: 'agent3',
-            senderName: 'Agent Lisa',
-            senderType: 'agent',
-            message: 'Hi Michael, I understand you have an emergency. I have checked Dr. Wilson\'s schedule and can offer you the following slots next week: Tuesday 2:00 PM, Wednesday 10:00 AM, or Friday 3:00 PM. Which would work best for you?',
-            timestamp: '2025-10-16T12:15:00Z'
-          },
-          {
-            id: '9',
-            senderId: '3',
-            senderName: 'Michael Brown',
-            senderType: 'customer',
-            message: 'Tuesday at 2:00 PM would be perfect. Thank you so much for your help!',
-            timestamp: '2025-10-16T13:00:00Z'
-          },
-          {
-            id: '10',
-            senderId: 'agent3',
-            senderName: 'Agent Lisa',
-            senderType: 'agent',
-            message: 'Great! I have rescheduled your appointment to Tuesday, October 22nd at 2:00 PM with Dr. Wilson. You will receive a confirmation email shortly. Is there anything else I can help you with?',
-            timestamp: '2025-10-16T15:30:00Z'
-          }
-        ]
-      }
-    ]
-
-    setTimeout(() => {
-      setTickets(mockTickets)
+  // API Functions
+  const fetchTickets = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/support-tickets')
+      if (!response.ok) throw new Error('Failed to fetch tickets')
+      const data = await response.json()
+      setTickets(data.tickets || [])
+    } catch (error) {
+      console.error('Error fetching tickets:', error)
+      toast.error('Failed to load support tickets')
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch('/api/customers')
+      if (!response.ok) throw new Error('Failed to fetch customers')
+      const data = await response.json()
+      setCustomers(data.customers || [])
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+    }
+  }
+
+  const createTicket = async (ticketData: SupportTicketCreateData) => {
+    try {
+      const response = await fetch('/api/support-tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ticketData)
+      })
+
+      if (!response.ok) throw new Error('Failed to create ticket')
+      
+      const newTicket = await response.json()
+      setTickets(prev => [newTicket, ...prev])
+      toast.success('Support ticket created successfully')
+    } catch (error) {
+      console.error('Error creating ticket:', error)
+      toast.error('Failed to create support ticket')
+      throw error
+    }
+  }
+
+  const updateTicket = async (ticketData: SupportTicketUpdateData) => {
+    try {
+      if (!selectedTicket?.id) throw new Error('No ticket selected')
+
+      const response = await fetch(`/api/support-tickets/${selectedTicket.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ticketData)
+      })
+
+      if (!response.ok) throw new Error('Failed to update ticket')
+      
+      const updatedTicket = await response.json()
+      setTickets(prev => prev.map(ticket => 
+        ticket.id === updatedTicket.id ? updatedTicket : ticket
+      ))
+      setSelectedTicket(updatedTicket)
+      toast.success('Ticket updated successfully')
+    } catch (error) {
+      console.error('Error updating ticket:', error)
+      toast.error('Failed to update ticket')
+      throw error
+    }
+  }
+
+  const deleteTicket = async (ticketId: string) => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) return
+
+    try {
+      const response = await fetch(`/api/support-tickets/${ticketId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to delete ticket')
+      
+      setTickets(prev => prev.filter(ticket => ticket.id !== ticketId))
+      toast.success('Ticket deleted successfully')
+    } catch (error) {
+      console.error('Error deleting ticket:', error)
+      toast.error('Failed to delete ticket')
+    }
+  }
+
+  const sendMessage = async (messageData: TicketMessageCreateData) => {
+    try {
+      const response = await fetch(`/api/support-tickets/${messageData.ticketId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageData)
+      })
+
+      if (!response.ok) throw new Error('Failed to send message')
+      
+      // Refresh the ticket to get updated messages
+      await fetchTickets()
+      toast.success('Message sent successfully')
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message')
+      throw error
+    }
+  }
+
+  const handleExportTickets = async () => {
+    try {
+      const queryParams = new URLSearchParams({
+        ...(filters.status && { status: filters.status }),
+        ...(filters.priority && { priority: filters.priority }),
+        ...(filters.category && { category: filters.category }),
+        ...(filters.assignedAgent && { assignedAgent: filters.assignedAgent }),
+        ...(searchQuery && { search: searchQuery })
+      })
+
+      const response = await fetch(`/api/support-tickets/export?${queryParams}`)
+      if (!response.ok) throw new Error('Failed to export tickets')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `support-tickets-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Support tickets exported successfully')
+    } catch (error) {
+      console.error('Error exporting tickets:', error)
+      toast.error('Failed to export support tickets')
+    }
+  }
+
+  // Load initial data
+  useEffect(() => {
+    fetchTickets()
+    fetchCustomers()
+    // Mock agents data for now
+    setAgents([
+      { id: 'agent1', name: 'Agent Sarah', email: 'sarah@echanneling.com' },
+      { id: 'agent2', name: 'Agent Mike', email: 'mike@echanneling.com' },
+      { id: 'agent3', name: 'Agent Lisa', email: 'lisa@echanneling.com' }
+    ])
   }, [])
 
   const filteredTickets = tickets.filter(ticket => {
@@ -259,7 +276,7 @@ export default function CustomerSupport() {
       (!filters.status || ticket.status === filters.status) &&
       (!filters.priority || ticket.priority === filters.priority) &&
       (!filters.category || ticket.category === filters.category) &&
-      (!filters.assignedAgent || ticket.assignedAgent === filters.assignedAgent)
+      (!filters.assignedAgent || ticket.assignedAgentName === filters.assignedAgent)
 
     return matchesSearch && matchesFilters
   })
@@ -269,94 +286,90 @@ export default function CustomerSupport() {
     currentPage * itemsPerPage
   )
 
-  const handleViewTicket = (ticket: Ticket) => {
+  // UI Handler Functions
+  const handleViewTicket = (ticket: SupportTicket) => {
     setSelectedTicket(ticket)
     setShowTicketModal(true)
   }
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedTicket) return
-
-    const message: TicketMessage = {
-      id: Date.now().toString(),
-      senderId: 'current-agent',
-      senderName: 'Agent You',
-      senderType: 'agent',
-      message: newMessage,
-      timestamp: new Date().toISOString()
-    }
-
-    const updatedTicket = {
-      ...selectedTicket,
-      messages: [...selectedTicket.messages, message],
-      updatedAt: new Date().toISOString(),
-      status: selectedTicket.status === 'waiting-customer' ? 'in-progress' : selectedTicket.status
-    }
-
-    setSelectedTicket(updatedTicket)
-    setTickets(tickets.map(t => t.id === updatedTicket.id ? updatedTicket : t))
-    setNewMessage('')
-    toast.success('Message sent successfully')
+  const handleEditTicket = (ticket: SupportTicket) => {
+    setSelectedTicket(ticket)
+    setIsEditingTicket(true)
+    setShowTicketForm(true)
   }
 
-  const handleUpdateTicketStatus = (ticketId: string, newStatus: Ticket['status']) => {
-    const updatedTickets = tickets.map(ticket => 
-      ticket.id === ticketId 
-        ? { 
-            ...ticket, 
-            status: newStatus, 
-            updatedAt: new Date().toISOString(),
-            resolvedAt: newStatus === 'resolved' ? new Date().toISOString() : ticket.resolvedAt,
-            closedAt: newStatus === 'closed' ? new Date().toISOString() : ticket.closedAt
-          } 
-        : ticket
-    )
-    setTickets(updatedTickets)
-    
-    if (selectedTicket?.id === ticketId) {
-      const updatedTicket = updatedTickets.find(t => t.id === ticketId)
-      if (updatedTicket) setSelectedTicket(updatedTicket)
+  const handleAddTicket = () => {
+    setSelectedTicket(null)
+    setIsEditingTicket(false)
+    setShowTicketForm(true)
+  }
+
+  const handleUpdateTicketStatus = async (ticketId: string, newStatus: SupportTicket['status']) => {
+    try {
+      const response = await fetch(`/api/support-tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (!response.ok) throw new Error('Failed to update ticket status')
+      
+      const updatedTicket = await response.json()
+      setTickets(prev => prev.map(ticket => 
+        ticket.id === ticketId ? updatedTicket : ticket
+      ))
+      
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(updatedTicket)
+      }
+      
+      toast.success(`Ticket status updated to ${newStatus.replace('_', ' ').toLowerCase()}`)
+    } catch (error) {
+      console.error('Error updating ticket status:', error)
+      toast.error('Failed to update ticket status')
     }
-    
-    toast.success(`Ticket status updated to ${newStatus}`)
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800'
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800'
-      case 'waiting-customer': return 'bg-purple-100 text-purple-800'
-      case 'resolved': return 'bg-green-100 text-green-800'
-      case 'closed': return 'bg-gray-100 text-gray-800'
+      case 'OPEN': return 'bg-blue-100 text-blue-800'
+      case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800'
+      case 'PENDING': return 'bg-purple-100 text-purple-800'
+
+      case 'RESOLVED': return 'bg-green-100 text-green-800'
+      case 'CLOSED': return 'bg-gray-100 text-gray-800'
+
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'low': return 'text-green-600'
-      case 'medium': return 'text-yellow-600'
-      case 'high': return 'text-orange-600'
-      case 'urgent': return 'text-red-600'
+      case 'LOW': return 'text-green-600'
+      case 'MEDIUM': return 'text-yellow-600'
+      case 'HIGH': return 'text-orange-600'
+      case 'URGENT': return 'text-red-600'
+      case 'CRITICAL': return 'text-red-800'
       default: return 'text-gray-600'
     }
   }
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case 'low': return <ArrowDown className="h-4 w-4" />
-      case 'medium': return <Minus className="h-4 w-4" />
-      case 'high': return <ArrowUp className="h-4 w-4" />
-      case 'urgent': return <AlertCircle className="h-4 w-4" />
+      case 'LOW': return <ArrowDown className="h-4 w-4" />
+      case 'MEDIUM': return <Minus className="h-4 w-4" />
+      case 'HIGH': return <ArrowUp className="h-4 w-4" />
+      case 'URGENT': return <AlertCircle className="h-4 w-4" />
+      case 'CRITICAL': return <AlertCircle className="h-4 w-4" />
       default: return <Minus className="h-4 w-4" />
     }
   }
 
   const stats = {
     total: tickets.length,
-    open: tickets.filter(t => t.status === 'open').length,
-    inProgress: tickets.filter(t => t.status === 'in-progress').length,
-    resolved: tickets.filter(t => t.status === 'resolved').length,
+    open: tickets.filter(t => t.status === 'OPEN').length,
+    inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
     avgResolutionTime: '2.3 hours'
   }
 
@@ -377,9 +390,23 @@ export default function CustomerSupport() {
                 Manage support tickets and customer communications
               </p>
             </div>
-            <div className="mt-4 lg:mt-0">
+            <div className="mt-4 lg:mt-0 flex items-center space-x-3">
               <button
-                onClick={() => setShowNewTicketModal(true)}
+                onClick={handleExportTickets}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </button>
+              <button
+                onClick={fetchTickets}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </button>
+              <button
+                onClick={handleAddTicket}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -485,11 +512,11 @@ export default function CustomerSupport() {
                       onChange={(e) => setFilters({...filters, status: e.target.value})}
                     >
                       <option value="">All Statuses</option>
-                      <option value="open">Open</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="waiting-customer">Waiting Customer</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
+                      <option value="OPEN">Open</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="RESOLVED">Resolved</option>
+                      <option value="CLOSED">Closed</option>
                     </select>
                   </div>
                   <div>
@@ -500,10 +527,11 @@ export default function CustomerSupport() {
                       onChange={(e) => setFilters({...filters, priority: e.target.value})}
                     >
                       <option value="">All Priorities</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                      <option value="CRITICAL">Critical</option>
                     </select>
                   </div>
                   <div>
@@ -514,11 +542,13 @@ export default function CustomerSupport() {
                       onChange={(e) => setFilters({...filters, category: e.target.value})}
                     >
                       <option value="">All Categories</option>
-                      <option value="technical">Technical</option>
-                      <option value="billing">Billing</option>
-                      <option value="appointment">Appointment</option>
-                      <option value="complaint">Complaint</option>
-                      <option value="general">General</option>
+                      <option value="TECHNICAL">Technical</option>
+                      <option value="BILLING">Billing</option>
+                      <option value="APPOINTMENT">Appointment</option>
+                      <option value="COMPLAINT">Complaint</option>
+                      <option value="GENERAL">General</option>
+                      <option value="EMERGENCY">Emergency</option>
+                      <option value="FEEDBACK">Feedback</option>
                     </select>
                   </div>
                   <div>
@@ -621,18 +651,35 @@ export default function CustomerSupport() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {ticket.assignedAgent}
+                          {ticket.assignedAgentName || 'Unassigned'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(ticket.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleViewTicket(ticket)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleViewTicket(ticket)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View Ticket"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleEditTicket(ticket)}
+                              className="text-gray-600 hover:text-gray-900"
+                              title="Edit Ticket"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteTicket(ticket.id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete Ticket"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -696,6 +743,28 @@ export default function CustomerSupport() {
           )}
         </div>
 
+        {/* Support Ticket Form Modal */}
+        {showTicketForm && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <SupportTicketForm
+                  ticket={selectedTicket || undefined}
+                  onSubmit={isEditingTicket ? updateTicket : createTicket}
+                  onCancel={() => {
+                    setShowTicketForm(false)
+                    setSelectedTicket(null)
+                    setIsEditingTicket(false)
+                  }}
+                  isEditMode={isEditingTicket}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Ticket Detail Modal */}
         {showTicketModal && selectedTicket && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -725,14 +794,14 @@ export default function CustomerSupport() {
                     <div className="flex items-center space-x-2">
                       <select
                         value={selectedTicket.status}
-                        onChange={(e) => handleUpdateTicketStatus(selectedTicket.id, e.target.value as Ticket['status'])}
+                        onChange={(e) => handleUpdateTicketStatus(selectedTicket.id, e.target.value as SupportTicket['status'])}
                         className="border border-gray-300 rounded-md px-3 py-1 text-sm"
                       >
-                        <option value="open">Open</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="waiting-customer">Waiting Customer</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
+                        <option value="OPEN">Open</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
                       </select>
                       <button
                         onClick={() => setShowTicketModal(false)}
@@ -752,7 +821,7 @@ export default function CustomerSupport() {
                       <div><span className="font-medium">Name:</span> {selectedTicket.customerName}</div>
                       <div><span className="font-medium">Email:</span> {selectedTicket.customerEmail}</div>
                       <div><span className="font-medium">Category:</span> {selectedTicket.category}</div>
-                      <div><span className="font-medium">Assigned Agent:</span> {selectedTicket.assignedAgent}</div>
+                      <div><span className="font-medium">Assigned Agent:</span> {selectedTicket.assignedAgentName || 'Unassigned'}</div>
                     </div>
                   </div>
 
@@ -760,20 +829,22 @@ export default function CustomerSupport() {
                   <div className="mb-6">
                     <h4 className="font-medium text-gray-900 mb-4">Conversation</h4>
                     <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {selectedTicket.messages.map((message) => (
-                        <div key={message.id} className={`flex ${message.senderType === 'agent' ? 'justify-end' : 'justify-start'}`}>
+                      {selectedTicket.messages.map((message, index) => (
+                        <div key={index} className={`flex ${message.senderType === 'AGENT' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderType === 'agent' 
+                            message.senderType === 'AGENT' 
                               ? 'bg-blue-600 text-white' 
+                              : message.senderType === 'SYSTEM'
+                              ? 'bg-gray-200 text-gray-800'
                               : 'bg-gray-100 text-gray-900'
                           }`}>
                             <div className="text-sm">
                               <div className="font-medium mb-1">{message.senderName}</div>
                               <div>{message.message}</div>
                               <div className={`text-xs mt-1 ${
-                                message.senderType === 'agent' ? 'text-blue-100' : 'text-gray-500'
+                                message.senderType === 'AGENT' ? 'text-blue-100' : 'text-gray-500'
                               }`}>
-                                {new Date(message.timestamp).toLocaleString()}
+                                {new Date(message.createdAt).toLocaleString()}
                               </div>
                             </div>
                           </div>
@@ -782,25 +853,15 @@ export default function CustomerSupport() {
                     </div>
                   </div>
 
-                  {/* New Message */}
+                  {/* Actions */}
                   <div className="border-t border-gray-200 pt-4">
-                    <div className="flex space-x-3">
-                      <div className="flex-1">
-                        <textarea
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type your response..."
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          rows={3}
-                        />
-                      </div>
+                    <div className="flex justify-end space-x-3">
                       <button
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim()}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => handleEditTicket(selectedTicket)}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
                       >
-                        <Send className="h-4 w-4 mr-2" />
-                        Send
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit & Reply
                       </button>
                     </div>
                   </div>

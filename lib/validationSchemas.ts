@@ -131,7 +131,7 @@ export const appointmentBookingSchema = z.object({
     }, 'Please enter a valid date of birth'),
   
   patientGender: z.enum(['MALE', 'FEMALE', 'OTHER'], {
-    errorMap: () => ({ message: 'Please select a gender' })
+    message: 'Please select a valid gender'
   }),
   
   // Emergency Contact
@@ -182,7 +182,7 @@ export const appointmentBookingSchema = z.object({
     .uuid('Invalid time slot selection'),
   
   appointmentType: z.enum(['CONSULTATION', 'FOLLOW_UP', 'EMERGENCY'], {
-    errorMap: () => ({ message: 'Please select appointment type' })
+    message: 'Please select a valid appointment type'
   }),
   
   visitReason: z.string()
@@ -193,7 +193,7 @@ export const appointmentBookingSchema = z.object({
   isFirstVisit: z.boolean(),
   
   preferredLanguage: z.enum(['ENGLISH', 'SINHALA', 'TAMIL'], {
-    errorMap: () => ({ message: 'Please select preferred language' })
+    message: 'Please select preferred language'
   }).optional(),
   
   specialRequirements: z.string()
@@ -235,7 +235,7 @@ export const doctorSearchSchema = z.object({
 // Payment Information Schema
 export const paymentFormSchema = z.object({
   paymentMethod: z.enum(['CREDIT_CARD', 'DEBIT_CARD', 'BANK_TRANSFER', 'CASH'], {
-    errorMap: () => ({ message: 'Please select a payment method' })
+    message: 'Please select a payment method'
   }),
   
   // Card Details (for card payments)
@@ -365,7 +365,7 @@ export const contactFormSchema = z.object({
     .trim(),
   
   category: z.enum(['GENERAL', 'SUPPORT', 'BILLING', 'FEEDBACK', 'COMPLAINT'], {
-    errorMap: () => ({ message: 'Please select a category' })
+    message: 'Please select a category'
   })
 })
 
@@ -447,6 +447,222 @@ export const reviewSchema = z.object({
   appointmentId: z.string().uuid('Invalid appointment reference')
 })
 
+// Customer Management Schemas
+export const customerCreateSchema = z.object({
+  firstName: z.string()
+    .min(1, requiredError('First name'))
+    .min(2, minLengthError('First name', 2))
+    .max(50, maxLengthError('First name', 50))
+    .regex(/^[a-zA-Z\s]+$/, 'First name can only contain letters')
+    .trim(),
+  
+  lastName: z.string()
+    .min(1, requiredError('Last name'))
+    .min(2, minLengthError('Last name', 2))
+    .max(50, maxLengthError('Last name', 50))
+    .regex(/^[a-zA-Z\s]+$/, 'Last name can only contain letters')
+    .trim(),
+  
+  email: emailSchema,
+  
+  phone: z.string()
+    .min(1, requiredError('Phone number'))
+    .regex(phoneRegex, 'Please enter a valid phone number')
+    .transform(val => val.replace(/\s/g, '')),
+  
+  dateOfBirth: z.string()
+    .optional()
+    .refine((date) => {
+      if (!date) return true
+      const dob = new Date(date)
+      const today = new Date()
+      const age = today.getFullYear() - dob.getFullYear()
+      return age >= 0 && age <= 120
+    }, 'Please enter a valid date of birth'),
+  
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+  
+  // Address Information
+  street: z.string().max(200, maxLengthError('Street address', 200)).optional(),
+  city: z.string().max(100, maxLengthError('City', 100)).optional(),
+  state: z.string().max(100, maxLengthError('State/Province', 100)).optional(),
+  zipCode: z.string().regex(/^[0-9]{5,10}$/, 'Invalid ZIP/postal code').optional(),
+  country: z.string().max(100, maxLengthError('Country', 100)).default('Sri Lanka'),
+  
+  // Emergency Contact
+  emergencyContactName: z.string()
+    .max(100, maxLengthError('Emergency contact name', 100))
+    .optional(),
+  
+  emergencyContactRelationship: z.string()
+    .max(50, maxLengthError('Relationship', 50))
+    .optional(),
+  
+  emergencyContactPhone: z.string()
+    .regex(phoneRegex, 'Please enter a valid phone number')
+    .optional(),
+  
+  // Medical Information
+  bloodType: z.string()
+    .regex(/^(A|B|AB|O)[+-]?$/, 'Invalid blood type')
+    .optional(),
+  
+  allergies: z.array(z.string().max(100)).max(20, 'Too many allergies listed').optional(),
+  chronicConditions: z.array(z.string().max(100)).max(20, 'Too many conditions listed').optional(),
+  currentMedications: z.array(z.string().max(100)).max(50, 'Too many medications listed').optional(),
+  
+  // Insurance Information
+  insuranceProvider: z.string().max(100, maxLengthError('Insurance provider', 100)).optional(),
+  insurancePolicyNumber: z.string().max(50, maxLengthError('Policy number', 50)).optional(),
+  insuranceGroupNumber: z.string().max(50, maxLengthError('Group number', 50)).optional(),
+  insuranceValidUntil: z.string().optional(),
+  
+  // Preferences
+  preferredLanguage: z.string().max(50).default('English'),
+  communicationMethod: z.enum(['EMAIL', 'SMS', 'PHONE', 'WHATSAPP']).default('EMAIL'),
+  appointmentReminders: z.boolean().default(true),
+  newsletterSubscription: z.boolean().default(false),
+  
+  // Management
+  tags: z.array(z.string().max(50)).max(10, 'Too many tags').optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BLACKLISTED']).default('ACTIVE'),
+  assignedAgentId: z.string().uuid().optional()
+})
+
+export const customerUpdateSchema = customerCreateSchema.partial().extend({
+  id: z.string().min(1, requiredError('Customer ID'))
+})
+
+export const customerSearchSchema = z.object({
+  search: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BLACKLISTED']).optional(),
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  assignedAgentId: z.string().uuid().optional(),
+  ageRange: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  communicationMethod: z.enum(['EMAIL', 'SMS', 'PHONE', 'WHATSAPP']).optional(),
+  page: z.number().min(1).default(1),
+  limit: z.number().min(1).max(100).default(20),
+  sortBy: z.enum(['name', 'email', 'createdAt', 'updatedAt', 'lastAppointmentAt']).default('updatedAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc')
+})
+
+// Support Ticket Schemas
+export const supportTicketCreateSchema = z.object({
+  customerId: z.string()
+    .min(1, requiredError('Customer'))
+    .uuid('Invalid customer selection'),
+  
+  customerName: z.string()
+    .min(1, requiredError('Customer name'))
+    .min(3, minLengthError('Customer name', 3))
+    .max(100, maxLengthError('Customer name', 100))
+    .trim(),
+  
+  customerEmail: emailSchema,
+  
+  title: z.string()
+    .min(1, requiredError('Ticket title'))
+    .min(5, minLengthError('Title', 5))
+    .max(200, maxLengthError('Title', 200))
+    .trim(),
+  
+  description: z.string()
+    .min(1, requiredError('Description'))
+    .min(20, minLengthError('Description', 20))
+    .max(2000, maxLengthError('Description', 2000))
+    .trim(),
+  
+  category: z.enum(['TECHNICAL', 'BILLING', 'APPOINTMENT', 'COMPLAINT', 'GENERAL', 'EMERGENCY', 'FEEDBACK'], {
+    message: 'Please select a category'
+  }),
+  
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL']).default('MEDIUM'),
+  
+  assignedAgentId: z.string().uuid().optional(),
+  
+  tags: z.array(z.string().max(50)).max(10, 'Too many tags').optional(),
+  
+  estimatedResolutionAt: z.string().optional()
+})
+
+export const supportTicketUpdateSchema = z.object({
+  id: z.string().min(1, requiredError('Ticket ID')),
+  
+  title: z.string()
+    .min(5, minLengthError('Title', 5))
+    .max(200, maxLengthError('Title', 200))
+    .trim()
+    .optional(),
+  
+  description: z.string()
+    .min(20, minLengthError('Description', 20))
+    .max(2000, maxLengthError('Description', 2000))
+    .trim()
+    .optional(),
+  
+  category: z.enum(['TECHNICAL', 'BILLING', 'APPOINTMENT', 'COMPLAINT', 'GENERAL', 'EMERGENCY', 'FEEDBACK']).optional(),
+  
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL']).optional(),
+  
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'WAITING_CUSTOMER', 'WAITING_AGENT', 'RESOLVED', 'CLOSED', 'CANCELLED']).optional(),
+  
+  assignedAgentId: z.string().uuid().nullable().optional(),
+  
+  tags: z.array(z.string().max(50)).max(10, 'Too many tags').optional(),
+  
+  estimatedResolutionAt: z.string().nullable().optional(),
+  
+  resolutionNotes: z.string()
+    .max(1000, maxLengthError('Resolution notes', 1000))
+    .optional(),
+  
+  satisfactionRating: z.number()
+    .min(1, 'Rating must be between 1 and 5')
+    .max(5, 'Rating must be between 1 and 5')
+    .optional()
+})
+
+export const ticketMessageCreateSchema = z.object({
+  ticketId: z.string()
+    .min(1, requiredError('Ticket ID'))
+    .uuid('Invalid ticket ID'),
+  
+  message: z.string()
+    .min(1, requiredError('Message'))
+    .min(1, minLengthError('Message', 1))
+    .max(2000, maxLengthError('Message', 2000))
+    .trim(),
+  
+  senderName: z.string()
+    .min(1, requiredError('Sender name'))
+    .max(100, maxLengthError('Sender name', 100)),
+  
+  senderType: z.enum(['CUSTOMER', 'AGENT', 'SYSTEM', 'ADMIN']),
+  
+  attachments: z.array(z.string().url('Invalid attachment URL')).max(5, 'Too many attachments').optional(),
+  
+  isInternal: z.boolean().default(false)
+})
+
+export const supportTicketSearchSchema = z.object({
+  search: z.string().optional(),
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'WAITING_CUSTOMER', 'WAITING_AGENT', 'RESOLVED', 'CLOSED', 'CANCELLED']).optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL']).optional(),
+  category: z.enum(['TECHNICAL', 'BILLING', 'APPOINTMENT', 'COMPLAINT', 'GENERAL', 'EMERGENCY', 'FEEDBACK']).optional(),
+  assignedAgentId: z.string().uuid().optional(),
+  customerId: z.string().uuid().optional(),
+  createdAfter: z.string().optional(),
+  createdBefore: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  page: z.number().min(1).default(1),
+  limit: z.number().min(1).max(100).default(20),
+  sortBy: z.enum(['ticketNumber', 'title', 'priority', 'status', 'createdAt', 'updatedAt']).default('updatedAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc')
+})
+
 // Export all schemas
 export const validationSchemas = {
   login: loginFormSchema,
@@ -457,7 +673,18 @@ export const validationSchemas = {
   contact: contactFormSchema,
   profileUpdate: profileUpdateSchema,
   changePassword: changePasswordSchema,
-  review: reviewSchema
+  review: reviewSchema,
+  
+  // Customer Management
+  customerCreate: customerCreateSchema,
+  customerUpdate: customerUpdateSchema,
+  customerSearch: customerSearchSchema,
+  
+  // Support Tickets
+  supportTicketCreate: supportTicketCreateSchema,
+  supportTicketUpdate: supportTicketUpdateSchema,
+  ticketMessageCreate: ticketMessageCreateSchema,
+  supportTicketSearch: supportTicketSearchSchema
 }
 
 // Type exports for TypeScript
@@ -470,3 +697,14 @@ export type ContactFormData = z.infer<typeof contactFormSchema>
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>
 export type ChangePasswordData = z.infer<typeof changePasswordSchema>
 export type ReviewData = z.infer<typeof reviewSchema>
+
+// Customer Management Types
+export type CustomerCreateData = z.infer<typeof customerCreateSchema>
+export type CustomerUpdateData = z.infer<typeof customerUpdateSchema>
+export type CustomerSearchData = z.infer<typeof customerSearchSchema>
+
+// Support Ticket Types
+export type SupportTicketCreateData = z.infer<typeof supportTicketCreateSchema>
+export type SupportTicketUpdateData = z.infer<typeof supportTicketUpdateSchema>
+export type TicketMessageCreateData = z.infer<typeof ticketMessageCreateSchema>
+export type SupportTicketSearchData = z.infer<typeof supportTicketSearchSchema>

@@ -18,12 +18,15 @@ import {
   Download,
   Upload,
   MoreVertical,
-  Star
+  Star,
+  Trash2
 } from 'lucide-react'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import CustomerForm from '../components/form/CustomerForm'
 import toast from 'react-hot-toast'
 import { RootState } from '../store/store'
+import { CustomerCreateData, CustomerUpdateData } from '../lib/validationSchemas'
 
 interface Customer {
   id: string
@@ -105,160 +108,7 @@ export default function CustomerManagement() {
     tags: []
   })
 
-  // Mock customer data
-  useEffect(() => {
-    const mockCustomers: Customer[] = [
-      {
-        id: '1',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@email.com',
-        phone: '+94771234567',
-        dateOfBirth: '1985-05-15',
-        gender: 'male',
-        address: {
-          street: '123 Main St',
-          city: 'Colombo',
-          state: 'Western Province',
-          zipCode: '00100',
-          country: 'Sri Lanka'
-        },
-        emergencyContact: {
-          name: 'Jane Doe',
-          relationship: 'Spouse',
-          phone: '+94777654321'
-        },
-        medicalInfo: {
-          bloodType: 'O+',
-          allergies: ['Penicillin', 'Shellfish'],
-          chronicConditions: ['Hypertension'],
-          currentMedications: ['Lisinopril 10mg']
-        },
-        insurance: {
-          provider: 'Sri Lanka Insurance',
-          policyNumber: 'SLI123456789',
-          groupNumber: 'GRP001',
-          validUntil: '2025-12-31'
-        },
-        preferences: {
-          preferredLanguage: 'English',
-          communicationMethod: 'email',
-          appointmentReminders: true,
-          newsletterSubscription: true
-        },
-        tags: ['VIP', 'Loyal Customer'],
-        status: 'active',
-        totalAppointments: 15,
-        lastAppointment: '2025-10-15',
-        nextAppointment: '2025-11-20',
-        customerValue: 75000,
-        satisfaction: 4.8,
-        createdAt: '2023-01-15T00:00:00Z',
-        updatedAt: '2025-10-15T00:00:00Z'
-      },
-      {
-        id: '2',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.johnson@email.com',
-        phone: '+94779876543',
-        dateOfBirth: '1990-08-22',
-        gender: 'female',
-        address: {
-          street: '456 Oak Ave',
-          city: 'Kandy',
-          state: 'Central Province',
-          zipCode: '20000',
-          country: 'Sri Lanka'
-        },
-        emergencyContact: {
-          name: 'Michael Johnson',
-          relationship: 'Brother',
-          phone: '+94773456789'
-        },
-        medicalInfo: {
-          bloodType: 'A+',
-          allergies: ['Latex'],
-          chronicConditions: [],
-          currentMedications: []
-        },
-        insurance: {
-          provider: 'Ceylinco Insurance',
-          policyNumber: 'CEY987654321',
-          groupNumber: 'GRP002',
-          validUntil: '2025-06-30'
-        },
-        preferences: {
-          preferredLanguage: 'English',
-          communicationMethod: 'sms',
-          appointmentReminders: true,
-          newsletterSubscription: false
-        },
-        tags: ['New Customer'],
-        status: 'active',
-        totalAppointments: 3,
-        lastAppointment: '2025-09-28',
-        nextAppointment: '',
-        customerValue: 12000,
-        satisfaction: 4.5,
-        createdAt: '2025-08-01T00:00:00Z',
-        updatedAt: '2025-09-28T00:00:00Z'
-      },
-      {
-        id: '3',
-        firstName: 'Michael',
-        lastName: 'Brown',
-        email: 'michael.brown@email.com',
-        phone: '+94765432109',
-        dateOfBirth: '1978-12-10',
-        gender: 'male',
-        address: {
-          street: '789 Pine Rd',
-          city: 'Galle',
-          state: 'Southern Province',
-          zipCode: '80000',
-          country: 'Sri Lanka'
-        },
-        emergencyContact: {
-          name: 'Lisa Brown',
-          relationship: 'Wife',
-          phone: '+94764321098'
-        },
-        medicalInfo: {
-          bloodType: 'B+',
-          allergies: [],
-          chronicConditions: ['Diabetes Type 2'],
-          currentMedications: ['Metformin 500mg']
-        },
-        insurance: {
-          provider: 'AIA Insurance',
-          policyNumber: 'AIA555666777',
-          groupNumber: 'GRP003',
-          validUntil: '2025-08-15'
-        },
-        preferences: {
-          preferredLanguage: 'Sinhala',
-          communicationMethod: 'phone',
-          appointmentReminders: true,
-          newsletterSubscription: true
-        },
-        tags: ['Chronic Care', 'Regular Customer'],
-        status: 'active',
-        totalAppointments: 28,
-        lastAppointment: '2025-10-10',
-        nextAppointment: '2025-10-25',
-        customerValue: 140000,
-        satisfaction: 4.9,
-        createdAt: '2022-05-20T00:00:00Z',
-        updatedAt: '2025-10-10T00:00:00Z'
-      }
-    ]
 
-    setTimeout(() => {
-      setCustomers(mockCustomers)
-      setLoading(false)
-    }, 1000)
-  }, [])
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = 
@@ -280,6 +130,101 @@ export default function CustomerManagement() {
     currentPage * itemsPerPage
   )
 
+  // API Functions
+  const fetchCustomers = async () => {
+    setLoading(true)
+    try {
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        ...(searchQuery && { search: searchQuery }),
+        ...(filters.status && { status: filters.status }),
+        ...(filters.gender && { gender: filters.gender }),
+        ...(filters.city && { city: filters.city })
+      })
+
+      const response = await fetch(`/api/customers?${queryParams}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setCustomers(data.customers)
+      } else {
+        toast.error(data.error || 'Failed to fetch customers')
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+      toast.error('Failed to fetch customers')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createCustomer = async (data: CustomerCreateData) => {
+    try {
+      const response = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        await fetchCustomers()
+        toast.success('Customer created successfully')
+      } else {
+        throw new Error(result.error || 'Failed to create customer')
+      }
+    } catch (error) {
+      console.error('Error creating customer:', error)
+      throw error
+    }
+  }
+
+  const updateCustomer = async (data: CustomerUpdateData) => {
+    try {
+      const response = await fetch(`/api/customers/${data.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        await fetchCustomers()
+        toast.success('Customer updated successfully')
+      } else {
+        throw new Error(result.error || 'Failed to update customer')
+      }
+    } catch (error) {
+      console.error('Error updating customer:', error)
+      throw error
+    }
+  }
+
+  const deleteCustomer = async (customerId: string) => {
+    if (!confirm('Are you sure you want to delete this customer?')) return
+
+    try {
+      const response = await fetch(`/api/customers/${customerId}`, {
+        method: 'DELETE'
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        await fetchCustomers()
+        toast.success(result.message || 'Customer deleted successfully')
+      } else {
+        throw new Error(result.error || 'Failed to delete customer')
+      }
+    } catch (error) {
+      console.error('Error deleting customer:', error)
+      toast.error('Failed to delete customer')
+    }
+  }
+
   const handleViewCustomer = (customer: Customer) => {
     setSelectedCustomer(customer)
     setShowCustomerModal(true)
@@ -287,26 +232,96 @@ export default function CustomerManagement() {
 
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer(customer)
-    // Navigate to edit page or open edit modal
-    toast.success(`Edit functionality for ${customer.firstName} ${customer.lastName}`)
+    setShowCustomerModal(true)
   }
 
-  const handleDeleteCustomers = () => {
+  const handleDeleteCustomers = async () => {
     if (selectedCustomers.length === 0) {
       toast.error('Please select customers to delete')
       return
     }
-    
-    toast.success(`Deleted ${selectedCustomers.length} customer(s)`)
-    setSelectedCustomers([])
+
+    if (!confirm(`Are you sure you want to delete ${selectedCustomers.length} customer(s)?`)) return
+
+    try {
+      const deletePromises = selectedCustomers.map(id => deleteCustomer(id))
+      await Promise.all(deletePromises)
+      setSelectedCustomers([])
+    } catch (error) {
+      console.error('Error deleting customers:', error)
+    }
   }
 
-  const handleExportCustomers = () => {
-    toast.success('Exporting customer data...')
+  const handleExportCustomers = async () => {
+    try {
+      const response = await fetch('/api/customers/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filters })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Convert to CSV and download
+        const csvContent = convertToCSV(data.data)
+        downloadCSV(csvContent, data.filename)
+        toast.success(`Exported ${data.count} customers`)
+      } else {
+        throw new Error(data.error || 'Failed to export customers')
+      }
+    } catch (error) {
+      console.error('Error exporting customers:', error)
+      toast.error('Failed to export customers')
+    }
   }
 
   const handleImportCustomers = () => {
     toast.success('Import functionality coming soon')
+  }
+
+  // Utility functions
+  const convertToCSV = (data: any[]) => {
+    if (data.length === 0) return ''
+    
+    const headers = Object.keys(data[0])
+    const csvRows = [headers.join(',')]
+    
+    for (const row of data) {
+      const values = headers.map(header => {
+        const value = row[header]
+        return `"${String(value).replace(/"/g, '""')}"`
+      })
+      csvRows.push(values.join(','))
+    }
+    
+    return csvRows.join('\n')
+  }
+
+  const downloadCSV = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  }
+
+  // Load customers on component mount and when filters change
+  useEffect(() => {
+    fetchCustomers()
+  }, [currentPage, searchQuery, filters])
+
+  // Handle form submission
+  const handleFormSubmit = async (data: CustomerCreateData | CustomerUpdateData) => {
+    if ('id' in data) {
+      await updateCustomer(data as CustomerUpdateData)
+    } else {
+      await createCustomer(data as CustomerCreateData)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -357,7 +372,10 @@ export default function CustomerManagement() {
                 Export
               </button>
               <button
-                onClick={() => setShowCustomerModal(true)}
+                onClick={() => {
+                  setSelectedCustomer(null)
+                  setShowCustomerModal(true)
+                }}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -650,14 +668,23 @@ export default function CustomerManagement() {
                             <button
                               onClick={() => handleViewCustomer(customer)}
                               className="text-blue-600 hover:text-blue-900"
+                              title="View Customer"
                             >
                               <Eye className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleEditCustomer(customer)}
                               className="text-gray-600 hover:text-gray-900"
+                              title="Edit Customer"
                             >
                               <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteCustomer(customer.id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete Customer"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </td>
