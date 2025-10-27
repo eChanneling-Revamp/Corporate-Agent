@@ -43,6 +43,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@next/swc-win32-x64-msvc": "^16.0.0",
     "@prisma/client": "^6.18.0",
     "@reduxjs/toolkit": "^2.0.1",
     "@types/multer": "^2.0.0",
