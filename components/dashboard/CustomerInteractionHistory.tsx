@@ -534,7 +534,7 @@ const CustomerInteractionHistory: React.FC<CustomerInteractionHistoryProps> = ({
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-3 w-3 ${i < interaction.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                                className={`h-3 w-3 ${i < (interaction.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
                               />
                             ))}
                           </span>
