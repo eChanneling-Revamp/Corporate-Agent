@@ -28,11 +28,15 @@
     "test:all": "npm run test:auth && npm run test:booking && npm run test:payment && npm run test:realtime && npm run test:mobile",
     "cypress:coverage": "nyc cypress run",
     "cypress:report": "nyc report --reporter=html",
-    "db:seed": "npx prisma db seed",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma db push --force-reset && prisma db seed",
     "db:studio": "npx prisma studio",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
     "db:setup": "node scripts/setup-database.js",
+    "setup:cross-platform": "node scripts/cross-platform-setup.js",
+    "setup:windows": "node scripts/cross-platform-setup.js",
+    "setup:fresh": "node scripts/cross-platform-setup.js",
     "pwa:icons": "node scripts/generatePWAIcons.js"
   },
   "prisma": {
