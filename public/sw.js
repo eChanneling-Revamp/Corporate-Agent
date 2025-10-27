@@ -83,7 +83,7 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
 
-        return fetch(event.request).then((response) => {
+        return fetch(event.request, { redirect: 'follow' }).then((response) => {
           // Don't cache non-successful responses
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
@@ -96,6 +96,9 @@ self.addEventListener('fetch', (event) => {
           });
 
           return response;
+        }).catch(() => {
+          // Return cached version or offline page
+          return caches.match(event.request) || caches.match('/offline');
         });
       })
       .catch(() => {
