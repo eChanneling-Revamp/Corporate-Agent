@@ -32,6 +32,7 @@
     "db:studio": "npx prisma studio",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
+    "db:setup": "node scripts/setup-database.js",
     "pwa:icons": "node scripts/generatePWAIcons.js"
   },
   "prisma": {

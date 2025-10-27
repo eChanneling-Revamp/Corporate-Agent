@@ -61,15 +61,29 @@ const initialState: AppointmentState = {
 // Async thunks
 export const fetchAppointments = createAsyncThunk(
   'appointments/fetchAppointments',
-  async (filters?: any, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/appointments', { params: filters })
-      // Return the actual data from the API response
-      if (response.data && response.data.success && response.data.data) {
-        return response.data.data.appointments || response.data.data
+      console.log('Full API response:', response.data)
+      
+      // Handle the nested data structure from our API
+      if (response.data && response.data.success) {
+        // Response structure: { success: true, data: { data: [...], meta: {...} } }
+        if (response.data.data && response.data.data.data) {
+          console.log('Returning appointments:', response.data.data.data)
+          return response.data.data.data
+        }
+        // Fallback for different response structures
+        if (response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data
+        }
+        if (Array.isArray(response.data)) {
+          return response.data
+        }
       }
-      return response.data
+      return []
     } catch (error: any) {
+      console.error('fetchAppointments error:', error)
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch appointments')
     }
   }

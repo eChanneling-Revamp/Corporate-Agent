@@ -2,8 +2,6 @@
 const CACHE_NAME = 'echanneling-v1';
 const urlsToCache = [
   '/',
-  '/offline',
-  '/styles/globals.css',
   '/logo.png',
   '/favicon.ico'
 ];
