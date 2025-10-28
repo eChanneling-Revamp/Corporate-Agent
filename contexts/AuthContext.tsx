@@ -31,16 +31,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const dispatch = useDispatch<any>()
   const { user, isAuthenticated, isLoading, token } = useSelector((state: RootState) => state.auth)
 
-  useEffect(() => {
-    // Check if we have a token in cookies on app startup
-    const cookieToken = Cookies.get('authToken')
-    const refreshToken = Cookies.get('refreshToken')
-    
-    if (cookieToken && !token && refreshToken) {
-      // Try to refresh the token
-      dispatch(refreshTokenThunk())
-    }
-  }, [dispatch, token])
+  // Removed automatic token refresh to prevent Fast Refresh issues
 
   const logout = () => {
     Cookies.remove('authToken')

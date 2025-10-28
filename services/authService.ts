@@ -3,12 +3,8 @@ import Cookies from 'js-cookie'
 
 // Dynamic API base URL configuration
 const getApiBaseUrl = () => {
-  // In production (Vercel), use relative path
-  if (process.env.NODE_ENV === 'production') {
-    return '/api'
-  }
-  // In development, use localhost with the correct port
-  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api'
+  // For development, always use localhost backend
+  return 'http://localhost:5000/api/v1'
 }
 
 const API_BASE_URL = getApiBaseUrl()

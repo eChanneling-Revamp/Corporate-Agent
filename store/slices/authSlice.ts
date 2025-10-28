@@ -133,6 +133,12 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload }
       }
     },
+    setCredentials: (state, action: PayloadAction<{ user: User; token: string; refreshToken?: string }>) => {
+      state.user = action.payload.user
+      state.token = action.payload.token
+      state.refreshToken = action.payload.refreshToken || state.refreshToken
+      state.isAuthenticated = true
+    },
   },
   extraReducers: (builder) => {
     // Login
@@ -202,5 +208,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { logout, clearError, setRegistrationStep, updateUser } = authSlice.actions
+export const { logout, clearError, setRegistrationStep, updateUser, setCredentials } = authSlice.actions
 export default authSlice.reducer

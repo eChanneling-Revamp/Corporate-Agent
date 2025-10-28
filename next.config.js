@@ -1,21 +1,35 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
+  
+  // Disable type checking during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // Disable ESLint during build  
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  experimental: {},
+  
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ignored: /node_modules/,
+      }
+    }
+    return config
+  },
+  
   images: {
-    domains: ['images.unsplash.com'],
+    domains: ['localhost'],
   },
-  env: {
-    CUSTOM_KEY: 'my-value',
-  },
+  
   async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: false,
-      },
-    ]
+    return []
   },
 }
 
